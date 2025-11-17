@@ -1,0 +1,10 @@
+<h2>Your Inquiry Has a Response</h2>
+
+<p>Hello {{ inquiry.user.fullname }},</p>
+<p>Your inquiry titled <strong>{{ inquiry.subject }}</strong> has received a reply:</p>
+
+<blockquote style="border-left:4px solid #0d6efd;padding-left:10px;">
+  {{ inquiry.reply }}
+</blockquote>
+
+<p>Thank you for contacting us.</p>

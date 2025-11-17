@@ -3,75 +3,84 @@
 
 <div class="row justify-content-center">
   <div class="col-md-8">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title mb-3">
-          {% if task %}Edit Task{% else %}New Task{% endif %}
-        </h3>
 
-        <form method="post" action="{{ form_action }}">
+    <div class="card shadow-sm {% if request.cookies.get('theme')=='dark' %}dark{% endif %}">
+      <div class="card-body">
+
+        <h3 class="mb-3">{{ "Edit Task" if task else "New Task" }}</h3>
+
+        <form method="post" action="{{ form_action }}" enctype="multipart/form-data">
 
           <!-- Title -->
           <div class="mb-3">
-            <label class="form-label">Title <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              name="title" 
-              class="form-control" 
-              maxlength="150" 
-              required
-              value="{{ (form.title if form and form.title is defined) or (task.title if task) or '' }}">
+            <label class="form-label">Title</label>
+            <input name="title" class="form-control" required
+                   value="{{ task.title if task else '' }}">
           </div>
 
           <!-- Description -->
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea 
-              name="description" 
-              class="form-control" 
-              rows="4">{{ (form.description if form and form.description is defined) or (task.description if task) or '' }}</textarea>
+            <textarea name="description" class="form-control" rows="4">{{ task.description if task else '' }}</textarea>
           </div>
 
-          <!-- Category and Due Date -->
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Category</label>
-              <input 
-                type="text" 
-                name="category" 
-                class="form-control"
-                value="{{ (form.category if form and form.category is defined) or (task.category if task) or '' }}">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Due Date</label>
-              <input 
-                type="date" 
-                name="due_date" 
-                class="form-control"
-                value="{{ (form.due_date if form and form.due_date is defined) or (task.due_date if task and task.due_date) or '' }}">
-            </div>
+          <!-- Category -->
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <input name="category" class="form-control"
+                   value="{{ task.category if task else '' }}">
           </div>
 
-          <!-- Status (only for editing) -->
+          <!-- Priority -->
+          <div class="mb-3">
+            <label class="form-label">Priority</label>
+            <select name="priority" class="form-select">
+              <option value="Low" {% if task and task.priority=='Low' %}selected{% endif %}>Low</option>
+              <option value="Medium" {% if (not task) or task.priority=='Medium' %}selected{% endif %}>Medium</option>
+              <option value="High" {% if task and task.priority=='High' %}selected{% endif %}>High</option>
+            </select>
+          </div>
+
+          <!-- Due Date -->
+          <div class="mb-3">
+            <label class="form-label">Due Date</label>
+            <input type="date" name="due_date" class="form-control"
+                   value="{{ task.due_date if task and task.due_date else '' }}">
+          </div>
+
+          <!-- Status (only when editing) -->
           {% if task %}
           <div class="mb-3">
             <label class="form-label">Status</label>
             <select name="status" class="form-select">
-              <option value="Pending" {% if task.status == 'Pending' %}selected{% endif %}>Pending</option>
-              <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+              <option value="Pending"   {% if task.status=='Pending' %}selected{% endif %}>Pending</option>
+              <option value="Completed" {% if task.status=='Completed' %}selected{% endif %}>Completed</option>
             </select>
           </div>
           {% endif %}
 
+          <!-- Attachment -->
+          <div class="mb-3">
+            <label class="form-label">Attachment</label>
+            <input type="file" name="attachment" class="form-control">
+            {% if task and task.attachment %}
+              <small class="text-muted">
+                Current: 
+                <a href="{{ url_for('attachment', filename=task.attachment) }}" target="_blank">
+                  {{ task.attachment }}
+                </a>
+              </small>
+            {% endif %}
+          </div>
+
           <!-- Buttons -->
           <div class="d-flex justify-content-between">
             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">
-              {% if task %}Update Task{% else %}Create Task{% endif %}
-            </button>
+            <button class="btn btn-primary">{{ "Update" if task else "Create" }}</button>
           </div>
 
         </form>
+
       </div>
     </div>
   </div>

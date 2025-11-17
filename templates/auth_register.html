@@ -1,24 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Register</h3>
-<form method="post">
-  <div class="mb-3">
-    <label>Username</label>
-    <input type="text" name="username" class="form-control" required>
+
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6">
+
+    <div class="card shadow-sm {% if request.cookies.get('theme')=='dark' %}dark{% endif %}">
+      <div class="card-body">
+
+        <h3 class="text-center mb-4">
+          <i class="bi bi-person-plus"></i> Register
+        </h3>
+
+        <form method="post">
+
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input name="fullname" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input name="email" type="email" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input name="password" type="password" class="form-control" required>
+          </div>
+
+          <button class="btn btn-success w-100">
+            <i class="bi bi-person-check"></i> Register
+          </button>
+
+          <div class="text-center mt-3">
+            <a href="{{ url_for('login') }}">Already have an account?</a>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
   </div>
-  <div class="mb-3">
-    <label>Email</label>
-    <input type="email" name="email" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label>Password</label>
-    <input type="password" name="password" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label>Confirm Password</label>
-    <input type="password" name="confirm" class="form-control" required>
-  </div>
-  <button class="btn btn-primary">Register</button>
-  <a href="{{ url_for('login') }}" class="btn btn-link">Already have an account?</a>
-</form>
+</div>
+
 {% endblock %}

@@ -15,7 +15,52 @@ nav a:hover {
 }
 
 .flashes {
-  list-style: none;
+  list-style: none;/* 🌙 Dark mode improvements */
+body.dark {
+  background: #121212 !important;
+  color: #e4e4e4 !important;
+}
+
+.navbar.dark, .card.dark, .list-group-item.dark, .table-dark {
+  background: #1e1e1e !important;
+  color: #fff !important;
+}
+
+input.dark, textarea.dark, select.dark {
+  background: #333 !important;
+  color: #fff !important;
+  border: 1px solid #555;
+}
+
+/* 🟦 Cards */
+.card {
+  border-radius: 12px;
+}
+
+/* 📅 Calendar */
+#calendar {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+body.dark #calendar {
+  background: #1e1e1e;
+}
+
+/* 🔔 Notifications */
+.notification-item {
+  border-left: 4px solid #0d6efd;
+  padding-left: 10px;
+}
+
+/* Admin Dashboard Cards */
+.card-stat {
+  transition: 0.3s;
+}
+.card-stat:hover {
+  transform: translateY(-4px);
+}
+
   padding: 0;
   color: green;
 }

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3 class="mb-4"><i class="bi bi-speedometer2"></i> Admin Dashboard</h3>
+
+<div class="row">
+
+  <!-- Total Users -->
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm text-center p-3 {% if request.cookies.get('theme')=='dark' %}dark{% endif %}">
+      <h4><i class="bi bi-people"></i></h4>
+      <h5>Total Users</h5>
+      <h3>{{ total_users }}</h3>
+    </div>
+  </div>
+
+  <!-- Total Tasks -->
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm text-center p-3 {% if request.cookies.get('theme')=='dark' %}dark{% endif %}">
+      <h4><i class="bi bi-list-task"></i></h4>
+      <h5>Total Tasks</h5>
+      <h3>{{ total_tasks }}</h3>
+    </div>
+  </div>
+
+  <!-- Pending Inquiries -->
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm text-center p-3 {% if request.cookies.get('theme')=='dark' %}dark{% endif %}">
+      <h4><i class="bi bi-chat-left-text"></i></h4>
+      <h5>Pending Inquiries</h5>
+      <h3>{{ pending_inquiries }}</h3>
+    </div>
+  </div>
+
+</div>
+
+<hr class="my-4">
+
+<h4 class="mb-3"><i class="bi bi-person-lines-fill"></i> All Users</h4>
+
+<table class="table table-bordered {% if request.cookies.get('theme')=='dark' %}table-dark{% endif %}">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Status</th>
+      <th>Joined</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.fullname }}</td>
+      <td>{{ u.email }}</td>
+      <td>
+        {% if u.is_admin %}
+        <span class="badge bg-danger">Admin</span>
+        {% else %}
+        <span class="badge bg-secondary">User</span>
+        {% endif %}
+      </td>
+      <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<hr class="my-4">
+
+<h4 class="mb-3"><i class="bi bi-list-task"></i> All Tasks</h4>
+
+<table class="table table-bordered {% if request.cookies.get('theme')=='dark' %}table-dark{% endif %}">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>User</th>
+      <th>Category</th>
+      <th>Priority</th>
+      <th>Status</th>
+      <th>Due Date</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for t in tasks %}
+    <tr>
+      <td>{{ t.title }}</td>
+      <td>{{ t.user.fullname }}</td>
+      <td>{{ t.category }}</td>
+      <td>{{ t.priority }}</td>
+      <td>{{ t.status }}</td>
+      <td>{{ t.due_date }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
