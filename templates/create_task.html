@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto" style="max-width:720px">
+  <div class="card-body">
+    <h5>Create Task</h5>
+    <form method="post" id="taskForm" novalidate>
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input class="form-control" name="title" required minlength="3">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" name="description" rows=3></textarea>
+      </div>
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label class="form-label">Due date</label>
+          <input class="form-control" type="datetime-local" name="due_date">
+        </div>
+        <div class="col-6 mb-3">
+          <label class="form-label">Estimate (hours)</label>
+          <input class="form-control" type="number" name="estimate_hours" value="1" min="0.1" step="0.1" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Priority</label>
+        <select class="form-select" name="priority">
+          <option>Low</option><option selected>Medium</option><option>High</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Tags (comma separated)</label>
+        <input class="form-control" name="tags">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Recurrence</label>
+        <select class="form-select" name="recurrence">
+          <option value="">None</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary">Create</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

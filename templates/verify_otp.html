@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto" style="max-width:420px">
+  <div class="card-body">
+    <h5 class="card-title">Enter OTP</h5>
+    <p>OTP sent to <strong>{{ email }}</strong></p>
+    <form method="post" novalidate>
+      <div class="mb-3">
+        <label class="form-label">OTP</label>
+        <input class="form-control" type="text" name="otp" required/>
+      </div>
+      <button class="btn btn-primary w-100" type="submit">Verify</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,70 +1,8 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 40px;
-  background-color: #fafafa;
-}
-
-nav a {
-  text-decoration: none;
-  color: #007BFF;
-  margin-right: 10px;
-}
-
-nav a:hover {
-  text-decoration: underline;
-}
-
-.flashes {
-  list-style: none;/* 🌙 Dark mode improvements */
-body.dark {
-  background: #121212 !important;
-  color: #e4e4e4 !important;
-}
-
-.navbar.dark, .card.dark, .list-group-item.dark, .table-dark {
-  background: #1e1e1e !important;
-  color: #fff !important;
-}
-
-input.dark, textarea.dark, select.dark {
-  background: #333 !important;
-  color: #fff !important;
-  border: 1px solid #555;
-}
-
-/* 🟦 Cards */
-.card {
-  border-radius: 12px;
-}
-
-/* 📅 Calendar */
-#calendar {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-}
-body.dark #calendar {
-  background: #1e1e1e;
-}
-
-/* 🔔 Notifications */
-.notification-item {
-  border-left: 4px solid #0d6efd;
-  padding-left: 10px;
-}
-
-/* Admin Dashboard Cards */
-.card-stat {
-  transition: 0.3s;
-}
-.card-stat:hover {
-  transform: translateY(-4px);
-}
-
-  padding: 0;
-  color: green;
-}
-
-form p {
-  margin-bottom: 10px;
+/* Mobile-first tweaks */
+body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+.card { border-radius: 12px; }
+.navbar-brand { font-weight: 700; }
+.list-group-item { border-radius: 8px; margin-bottom: 6px; }
+@media(min-width: 768px){
+  .container { max-width: 960px; }
 }

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>Inquiries Inbox</h4>
+{% if not inquiries %}
+  <p class="text-muted">No inquiries.</p>
+{% else %}
+  <div class="accordion" id="inqs">
+    {% for iq in inquiries %}
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading{{ iq.id }}">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c{{ iq.id }}">
+          {{ iq.subject or 'No subject' }} — {{ iq.sender_email }}
+        </button>
+      </h2>
+      <div id="c{{ iq.id }}" class="accordion-collapse collapse" data-bs-parent="#inqs">
+        <div class="accordion-body">
+          <p>{{ iq.message }}</p>
+          <small class="text-muted">At {{ iq.created_at }}</small>
+          {% if iq.facilitator_reply %}
+            <div class="alert alert-success mt-2">Replied: {{ iq.facilitator_reply }} at {{ iq.facilitator_reply_at }}</div>
+          {% else %}
+            <form method="post" action="{{ url_for('reply_inquiry', id=iq.id) }}">
+              <div class="mb-2">
+                <label class="form-label">Reply to customer</label>
+                <textarea class="form-control" name="reply" rows=3 required></textarea>
+              </div>
+              <button class="btn btn-primary">Send Reply</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

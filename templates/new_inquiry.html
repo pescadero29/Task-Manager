@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto" style="max-width:720px">
+  <div class="card-body">
+    <h5>Send an Inquiry / Contact Support</h5>
+    <form method="post" novalidate>
+      <div class="mb-3">
+        <label class="form-label">Your email</label>
+        <input class="form-control" type="email" name="email" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Subject</label>
+        <input class="form-control" name="subject">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Message</label>
+        <textarea class="form-control" name="message" rows=4 required></textarea>
+      </div>
+      <button class="btn btn-primary">Send</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
