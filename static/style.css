@@ -1,31 +1,36 @@
 /* Mobile-first tweaks */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@400;600&display=swap');
+
 body { 
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Inter', 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8fafc;
-  color: #39404a;
+  color: #2b2f38;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
 }
 
 /* Color Palette */
 :root {
-  --color-primary: #5c6ac4;
-  --color-primary-light: #7f8fff;
-  --color-primary-dark: #35499c;
+  --color-primary: #4a51a0;
+  --color-primary-light: #6b74d9;
+  --color-primary-dark: #2b2f65;
 
-  --color-secondary: #9c84f3;
-  --color-secondary-light: #b9a5f5;
-  --color-secondary-dark: #6b5cc7;
+  --color-secondary: #907bec;
+  --color-secondary-light: #aea3f7;
+  --color-secondary-dark: #6d5cbf;
 
   --color-success: #4caf50;
-  --color-warning: #ffb400;
-  --color-danger: #ef5350;
+  /* Darken warning color slightly for better contrast */
+  --color-warning: #d09500; /* was #ffb400 */
+  --color-danger: #e04848;
 
-  --color-bg-white: rgba(255 255 255 / 0.9);
-  --color-bg-glass: rgba(255 255 255 / 0.6);
+  --color-bg-white: rgba(255 255 255 / 0.95);
+  --color-bg-glass: rgba(255 255 255 / 0.8);
 
-  --border-radius: 12px;
-  --transition-speed: 0.3s;
+  --border-radius: 14px;
+  --transition-speed: 0.35s;
 }
 
 /* Cards */
@@ -105,7 +110,8 @@ body {
 }
 .task-description {
   font-size: 0.9rem;
-  color: #55606c;
+  /* Darken secondary text for better readability */
+  color: #444d59; /* was #55606c */
   margin-bottom: 0.5rem;
 }
 
@@ -132,7 +138,8 @@ body {
 }
 .status-badge.bg-warning {
   background-color: var(--color-warning);
-  color: #5a4400;
+  /* Darken warning badge text for contrast */
+  color: #3f3000; /* was #5a4400 */
 }
 
 /* Priority Badges */
@@ -141,8 +148,9 @@ body {
   color: white;
 }
 .priority-badge.medium {
-  background-color: #ffb400;
-  color: #5a4400;
+  background-color: #d09500; /* match updated warning color */
+  /* Darken medium priority badge text for contrast */
+  color: #3f3000; /* was #5a4400 */
 }
 .priority-badge.low {
   background-color: #4caf50;
