@@ -341,13 +341,30 @@ def new_inquiry():
         inquiry = Inquiry(sender_email=sender, subject=subject, message=message)
         db.session.add(inquiry)
         db.session.commit()
-        # Auto-response email automation
-        body = f"Hi,\n\nThanks for your inquiry about '{subject or 'general'}'.\nOur team will look into it and respond soon.\n\n-- TaskManager Bot"
-        send_email(sender, f"Re: {subject or 'Your inquiry'}", body)
+
+        # Send inquiry email to the fixed admin email
+        send_email("zurielpescadero123@gmail.com", subject or "No Subject", message)
+
+        confirm_body = f"Hi,\n\nThanks for your inquiry about '{subject or 'general'}'.\nOur team will look into it and respond soon.\n\n-- TaskManager Bot"
+
+        if current_user.is_authenticated and current_user.email != "zurielpescadero123@gmail.com":
+            if current_user.email.lower() == sender.lower():
+                # If sender email matches logged-in user, send one confirmation email only
+                send_email(sender, "Inquiry Confirmation", confirm_body)
+            else:
+                # Send confirmation to logged-in user
+                send_email(current_user.email, "Inquiry Confirmation", confirm_body)
+                # Auto-response to sender
+                send_email(sender, f"Re: {subject or 'Your inquiry'}", confirm_body)
+        else:
+            # Not logged in - send auto-response only to sender
+            send_email(sender, f"Re: {subject or 'Your inquiry'}", confirm_body)
+
         inquiry.auto_responded = True
         db.session.commit()
         flash("Inquiry received — an auto-response was sent.", "success")
         return redirect(url_for('index'))
+
     return render_template('new_inquiry.html')
 
 # Facilitator inbox (view inquiries) + reply

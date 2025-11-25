@@ -387,3 +387,11 @@ body {
     margin-left: 0;
   }
 }
+
+/* Readonly email field style */
+input.readonly-email {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  user-select: none;
+  color: #495057;
+}
