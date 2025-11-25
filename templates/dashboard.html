@@ -1,40 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row">
+<div class="row gx-4">
   <div class="col-12 col-md-4">
-    <div class="card mb-3">
+    <div class="card task-list-card mb-4">
       <div class="card-body">
-        <h6>Metrics</h6>
-        <p>Total tasks: <strong>{{ metrics.total_tasks }}</strong></p>
-        <p>Completed: <strong>{{ metrics.completed_tasks }}</strong></p>
-        <p>Completion: <strong>{{ "%.1f"|format(metrics.completion_rate) }}%</strong></p>
-        <p>Est. hours: <strong>{{ "%.1f"|format(metrics.total_est_hours) }}</strong></p>
-        <p>Due today: <strong>{{ metrics.due_today }}</strong></p>
+        <h5 class="mb-4 text-primary fw-bold">Metrics</h5>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-3"><strong>{{ metrics.total_tasks }}</strong> Total tasks</li>
+          <li class="mb-3"><strong>{{ metrics.completed_tasks }}</strong> Completed</li>
+          <li class="mb-3"><strong>{{ "%.1f"|format(metrics.completion_rate) }}%</strong> Completion rate</li>
+          <li class="mb-3"><strong>{{ "%.1f"|format(metrics.total_est_hours) }}</strong> Estimated hours</li>
+          <li><strong>{{ metrics.due_today }}</strong> Due today</li>
+        </ul>
+        <div class="d-grid gap-2 mt-4 sidebar-actions">
+          <a class="btn btn-primary" href="{{ url_for('create_task') }}">+ New Task</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('new_inquiry') }}">Send Inquiry</a>
+        </div>
       </div>
-    </div>
-    <div class="d-grid gap-2">
-      <a class="btn btn-outline-primary" href="{{ url_for('create_task') }}">+ New Task</a>
-      <a class="btn btn-outline-secondary" href="{{ url_for('new_inquiry') }}">Send Inquiry</a>
     </div>
   </div>
 
   <div class="col-12 col-md-8">
-    <div class="card">
+    <div class="card task-list-card">
       <div class="card-body">
-        <h5>Your Tasks</h5>
+        <h5 class="mb-4 text-primary">Your Tasks</h5>
         {% if not tasks %}
           <p class="text-muted">No tasks yet.</p>
         {% else %}
-          <div class="list-group">
+          <div class="task-list">
           {% for t in tasks %}
-            <div class="list-group-item d-flex justify-content-between align-items-start">
-              <div class="ms-2 me-auto">
-                <div class="fw-bold">{{ t.title }} {% if t.completed %}<span class="badge bg-success">Done</span>{% endif %}</div>
-                <small class="text-muted">{{ t.priority }} • Est {{ "%.1f"|format(t.estimate_hours) }} hrs • {{ t.tags }}</small>
-                <p class="mb-1">{{ t.description[:120] }}{% if t.description|length > 120 %}...{% endif %}</p>
-                <small>Due: {{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '—' }}</small>
+            <div class="task-card d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
+              <div class="task-info flex-grow-1 mb-2 mb-md-0">
+                <h6 class="mb-1 fw-semibold">
+                  {{ t.title }}
+                  {% if t.completed %}
+                    <span class="badge status-badge bg-success">Done</span>
+                  {% endif %}
+                </h6>
+                <div class="mb-1 d-flex flex-wrap align-items-center gap-2">
+                  <span class="badge priority-badge {{ t.priority|lower }}">{{ t.priority }}</span>
+                  {% for cat in t.tags.split(',') %}
+                    <span class="badge category-badge">{{ cat.strip() }}</span>
+                  {% endfor %}
+                  <small class="text-muted ms-auto">Est {{ "%.1f"|format(t.estimate_hours) }} hrs</small>
+                </div>
+                <p class="task-description mb-1">{{ t.description[:120] }}{% if t.description|length > 120 %}...{% endif %}</p>
+                <small class="text-muted">Due: {{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '—' }}</small>
               </div>
-              <div class="text-end">
+              <div class="task-actions d-flex flex-wrap gap-2 justify-content-md-end">
                 <form method="post" action="{{ url_for('toggle_complete', task_id=t.id) }}" style="display:inline">
                   <button class="btn btn-sm btn-outline-success toggle-complete" data-id="{{ t.id }}">{{ 'Undo' if t.completed else 'Complete' }}</button>
                 </form>
