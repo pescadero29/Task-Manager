@@ -293,29 +293,86 @@ body {
 
 /* Notifications Badge Override */
 .navbar-nav .badge {
-  font-size: 0.6rem;
-  padding: 0.3em 0.5em;
+  font-size: 0.75rem;
+  padding: 0.35em 0.55em;
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  font-weight: 700;
+  line-height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-danger);
+  color: white;
+  box-shadow: 0 0 6px var(--color-danger);
+  animation: pulse 2.5s infinite alternate;
+  transition: box-shadow 0.3s ease;
+  z-index: 1050;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 6px var(--color-danger);
+  }
+  100% {
+    box-shadow: 0 0 12px var(--color-danger);
+  }
 }
 
 /* Profile dropdown image */
 .navbar-nav .nav-link img {
   object-fit: cover;
   border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-/* Task Card Badge Overrides */
-.status-badge {
-  font-size: 0.75rem;
-  padding: 0.25em 0.5em;
-  text-transform: uppercase;
+.navbar-nav .nav-link img:hover {
+  box-shadow: 0 0 10px var(--color-primary-light);
+  transform: scale(1.1);
 }
-.priority-badge {
-  text-transform: uppercase;
+
+/* Profile dropdown text alignment */
+.navbar-nav .nav-link span {
+  vertical-align: middle;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin-left: 0.4rem;
+  user-select: none;
+  transition: color 0.3s ease;
 }
-.category-badge {
-  background-color: var(--color-secondary-light);
-  border-radius: 20px;
-  padding: 0.25em 0.75em;
+
+.navbar-nav .nav-link:hover span {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* Notification icon hover effect */
+.navbar-nav .nav-link.position-relative:hover i {
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* Notification icon image */
+.notification-icon {
+  vertical-align: middle;
+  max-width: 24px;
+  max-height: 24px;
+  display: inline-block;
+}
+
+/* Notification image hover effect */
+.navbar-nav .nav-link.position-relative:hover .notification-icon {
+  filter: brightness(0.8);
+  cursor: pointer;
+  transition: filter 0.3s ease;
 }
 
 /* Responsive tweaks for sidebar toggle and layout */
