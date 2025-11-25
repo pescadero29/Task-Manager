@@ -1,4 +1,4 @@
-zz{% extends "base.html" %}
+{% extends "base.html" %}
 {% block content %}
 <div class="card mx-auto" style="max-width:720px">
   <div class="card-body">
@@ -15,7 +15,7 @@ zz{% extends "base.html" %}
       <div class="row">
         <div class="col-6 mb-3">
           <label class="form-label">Due date</label>
-          <input class="form-control" type="datetime-local" name="due_date">
+          <input class="form-control" type="datetime-local" name="due_date" id="due_date_create">
         </div>
         <div class="col-6 mb-3">
           <label class="form-label">Estimate (hours)</label>
@@ -46,4 +46,48 @@ zz{% extends "base.html" %}
     </form>
   </div>
 </div>
+
+<script>
+  function setMinDateTime(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    input.min = minDateTime;
+  }
+
+  function validateDueDateIsFuture(event, inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return true;
+    const dueDateStr = input.value;
+    if (!dueDateStr) return true;
+    const dueDate = new Date(dueDateStr);
+    const now = new Date();
+    if (dueDate < now) {
+      event.preventDefault();
+      alert("Due date cannot be in the past. Please select a valid date and time.");
+      input.focus();
+      return false;
+    }
+    return true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setMinDateTime('due_date_create');
+    const form = document.getElementById('taskForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (!validateDueDateIsFuture(e, 'due_date_create')) {
+          return;
+        }
+      });
+      setInterval(() => setMinDateTime('due_date_create'), 60000);
+    }
+  });
+</script>
 {% endblock %}

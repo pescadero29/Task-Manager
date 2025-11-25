@@ -232,6 +232,10 @@ def create_task():
         if due_date_raw:
             try:
                 due_date = datetime.fromisoformat(due_date_raw)
+                # Validate due_date is not in the past (allow current or future)
+                if due_date < datetime.utcnow():
+                    flash("Due date cannot be in the past.", "danger")
+                    return redirect(url_for('create_task'))
             except ValueError:
                 flash("Invalid due date format.", 'danger')
                 return redirect(url_for('create_task'))
@@ -239,8 +243,8 @@ def create_task():
             estimate_f = float(estimate)
             if estimate_f <= 0:
                 raise ValueError()
-        except Exception:
-            flash("Estimate must be a positive number.", 'danger')
+        except ValueError:
+            flash("Estimate hours must be a positive number.", "danger")
             return redirect(url_for('create_task'))
 
         task = Task(title=title, description=description, created_by=current_user.id,

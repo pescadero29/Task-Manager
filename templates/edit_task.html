@@ -15,7 +15,7 @@
       <div class="row">
         <div class="col-6 mb-3">
           <label class="form-label">Due date</label>
-          <input class="form-control" type="datetime-local" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%dT%H:%M') if task.due_date else '' }}">
+          <input class="form-control" type="datetime-local" name="due_date" id="due_date_edit" value="{{ task.due_date.strftime('%Y-%m-%dT%H:%M') if task.due_date else '' }}">
         </div>
         <div class="col-6 mb-3">
           <label class="form-label">Estimate (hours)</label>
@@ -51,4 +51,47 @@
     </form>
   </div>
 </div>
+<script>
+  function setMinDateTime(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    input.min = minDateTime;
+  }
+
+  function validateDueDateIsFuture(event, inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return true;
+    const dueDateStr = input.value;
+    if (!dueDateStr) return true;
+    const dueDate = new Date(dueDateStr);
+    const now = new Date();
+    if (dueDate < now) {
+      event.preventDefault();
+      alert("Due date cannot be in the past. Please select a valid date and time.");
+      input.focus();
+      return false;
+    }
+    return true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setMinDateTime('due_date_edit');
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (!validateDueDateIsFuture(e, 'due_date_edit')) {
+          return;
+        }
+      });
+      setInterval(() => setMinDateTime('due_date_edit'), 60000);
+    }
+  });
+</script>
 {% endblock %}
