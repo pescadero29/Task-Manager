@@ -25,9 +25,9 @@
       <div class="mb-3">
         <label class="form-label">Priority</label>
         <select class="form-select" name="priority">
-          <option {% if task.priority=='Low' %}selected{% endif %}>Low</option>
-          <option {% if task.priority=='Medium' %}selected{% endif %}>Medium</option>
-          <option {% if task.priority=='High' %}selected{% endif %}>High</option>
+          <option {% if task.priority=='Timely' %}selected{% endif %}>Timely</option>
+          <option {% if task.priority=='Prompt' %}selected{% endif %}>Prompt</option>
+          <option {% if task.priority=='Immediate' %}selected{% endif %}>Immediate</option>
         </select>
       </div>
       <div class="mb-3">
