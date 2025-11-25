@@ -306,11 +306,24 @@ def delete_task(task_id):
 @login_required
 def toggle_complete(task_id):
     task = Task.query.get_or_404(task_id)
+
     if task.created_by != current_user.id and task.assignee != current_user.id and not current_user.is_facilitator:
-        return jsonify({'ok': False, 'message': 'No permission'})
+        flash("No permission to modify this task.", "danger")
+        return redirect(url_for('dashboard'))
+
+    # Toggle completion
     task.completed = not task.completed
     db.session.commit()
-    return jsonify({'ok': True, 'completed': task.completed})
+
+    # Proper flash messages
+    if task.completed:
+        flash("Task marked as completed!", "success")
+    else:
+        flash("Task marked as incomplete.", "info")
+
+    # Redirect back so no JSON appears
+    return redirect(url_for('dashboard'))
+
 
 # Inquiry (customer) - public endpoint to send inquiry (with validation & auto-response)
 @app.route('/inquiry/new', methods=['GET','POST'])
