@@ -28,6 +28,11 @@
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('calendar') }}">
+                <i class="bi bi-calendar"></i> Calendar
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('create_task') }}">
                 <i class="bi bi-plus-circle"></i> New Task
               </a>
@@ -76,17 +81,14 @@
             <li class="nav-item dropdown me-3">
 <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
   <img src="{{ url_for('static', filename='images/notification.jpg') }}" alt="Notifications" class="notification-icon" width="24" height="24">
-  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-    3<span class="visually-hidden">unread notifications</span>
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+    0<span class="visually-hidden">unread notifications</span>
   </span>
 </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="min-width: 300px;">
                 <li><h6 class="dropdown-header">Notifications</h6></li>
-                <li><a class="dropdown-item" href="#">You have 3 new tasks assigned</a></li>
-                <li><a class="dropdown-item" href="#">Task "Design mockups" is due tomorrow</a></li>
-                <li><a class="dropdown-item" href="#">New comment on task "Fix bugs"</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
+                <li><a class="dropdown-item text-center" href="#">No notifications</a></li>
               </ul>
             </li>
 

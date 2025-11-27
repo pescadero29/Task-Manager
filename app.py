@@ -71,6 +71,13 @@ class Inquiry(db.Model):
     facilitator_reply = db.Column(db.Text, nullable=True)
     facilitator_reply_at = db.Column(db.DateTime, nullable=True)
 
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 # --- Helpers ---
 @login_manager.user_loader
 def load_user(user_id):
@@ -415,6 +422,37 @@ def api_tasks():
             'completed': t.completed
         })
     return jsonify(data)
+
+# API: notifications
+@app.route('/api/notifications')
+@login_required
+def api_notifications():
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    data = []
+    for n in notifications:
+        data.append({
+            'id': n.id,
+            'message': n.message,
+            'is_read': n.is_read,
+            'created_at': n.created_at.isoformat()
+        })
+    return jsonify(data)
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    if notification.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    notification.is_read = True
+    db.session.commit()
+    return jsonify({'success': True})
+
+# Calendar view
+@app.route('/calendar')
+@login_required
+def calendar():
+    return render_template('calendar.html')
 
 # --- Background jobs (automations) ---
 def send_due_reminders():
