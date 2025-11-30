@@ -7,43 +7,61 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body class="theme-light">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-tasks"></i>
-                <span class="sidebar-text">TaskFlow</span>
-            </div>
-            <button class="sidebar-close" id="sidebar-close">
-                <i class="fas fa-times"></i>
-            </button>
+  </head>
+  <body class="bg-light">
+    <div class="d-flex" id="wrapper">
+      <!-- Sidebar -->
+      <nav id="sidebar" class="bg-white border-end">
+        <div class="sidebar-header p-3">
+          <a href="{{ url_for('index') }}" class="navbar-brand d-flex align-items-center gap-2 mb-4">
+            <img src="{{ url_for('static', filename='images/task_manager_icon.png') }}" alt="Logo" width="30" height="30">
+            <span class="fs-4 fw-bold text-primary">TaskManager</span>
+          </a>
+          <hr />
         </div>
-        <nav class="sidebar-nav">
-            <a href="{{ url_for('dashboard') }}" class="nav-item active">
-                <i class="fas fa-home"></i>
-                <span class="sidebar-text">Dashboard</span>
-            </a>
-            <a href="{{ url_for('dashboard') }}" class="nav-item">
-                <i class="fas fa-check-square"></i>
-                <span class="sidebar-text">Tasks</span>
-            </a>
-            <a href="{{ url_for('calendar') }}" class="nav-item">
-                <i class="fas fa-calendar-day"></i>
-                <span class="sidebar-text">Calendar</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-bell"></i>
-                <span class="sidebar-text">Notifications</span>
-                <span class="notification-badge">3</span>
-            </a>
-            <a href="{{ url_for('profile') }}" class="nav-item">
-                <i class="fas fa-user"></i>
-                <span class="sidebar-text">Profile</span>
-            </a>
-        </nav>
-    </aside>
+        <ul class="nav flex-column px-2">
+          {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('calendar') }}">
+                <i class="bi bi-calendar"></i> Calendar
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('create_task') }}">
+                <i class="bi bi-plus-circle"></i> New Task
+              </a>
+            </li>
+            {% if current_user.is_facilitator %}
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('inbox') }}">
+                <i class="bi bi-inbox"></i> Inbox
+              </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('login') }}">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('register') }}">
+                <i class="bi bi-person-plus"></i> Register
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
 
     <!-- Main Content -->
     <div class="main-content" id="main-content">

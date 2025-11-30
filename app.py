@@ -455,31 +455,6 @@ def mark_notification_read(notification_id):
 def calendar():
     return render_template('calendar.html')
 
-# Profile view and update
-@app.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    if request.method == 'POST':
-        # Handle bio update
-        bio = request.form.get('bio', '').strip()
-        current_user.bio = bio
-
-        # Handle profile picture upload
-        if 'profile_picture' in request.files:
-            file = request.files['profile_picture']
-            if file and file.filename:
-                # Save the file (simple implementation, in production use secure filename)
-                filename = f"profile_{current_user.id}.jpg"
-                filepath = os.path.join(app.root_path, 'static', 'images', filename)
-                file.save(filepath)
-                # Optionally update user model with profile_pic path if added to model
-
-        db.session.commit()
-        flash("Profile updated successfully.", "success")
-        return redirect(url_for('profile'))
-
-    return render_template('profile.html')
-
 # --- Background jobs (automations) ---
 def send_due_reminders():
     """Find tasks due tomorrow and send reminders to assignee/creator."""
