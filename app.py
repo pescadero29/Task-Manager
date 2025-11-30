@@ -455,6 +455,14 @@ def mark_notification_read(notification_id):
 def calendar():
     return render_template('calendar.html')
 
+# Profile view
+@app.route('/profile')
+@login_required
+def profile():
+    # Get user's tasks and metrics for profile display
+    tasks = Task.query.filter((Task.created_by == current_user.id) | (Task.assignee == current_user.id)).order_by(Task.due_date.asc().nulls_last()).all()
+    return render_template('profile.html', tasks=tasks, metrics=g.metrics)
+
 # --- Background jobs (automations) ---
 def send_due_reminders():
     """Find tasks due tomorrow and send reminders to assignee/creator."""

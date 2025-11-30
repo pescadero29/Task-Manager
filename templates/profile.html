@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Task Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Profile Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card profile-header-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-4 mb-md-0">
+                            <div class="profile-avatar-container position-relative">
+                                <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Profile Picture" class="profile-avatar-large rounded-circle border shadow" width="120" height="120">
+                                <button class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0" style="width: 32px; height: 32px;" title="Change Photo">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h2 class="mb-2">{{ current_user.username if current_user.is_authenticated else 'Guest User' }}</h2>
+                            <p class="text-muted mb-3">Task Management Enthusiast</p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-primary">Premium User</span>
+                                <span class="badge bg-success">Active</span>
+                                <span class="badge bg-info">{{ metrics.total_tasks if metrics else 0 }} Tasks Created</span>
+                            </div>
+                            <div class="profile-stats d-flex gap-4">
+                                <div class="text-center">
+                                    <div class="fw-bold text-primary">{{ metrics.completed_tasks if metrics else 0 }}</div>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold text-success">{{ "%.1f"|format(metrics.completion_rate) if metrics else 0 }}%</div>
+                                    <small class="text-muted">Success Rate</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold text-warning">{{ "%.1f"|format(metrics.total_est_hours) if metrics else 0 }}</div>
+                                    <small class="text-muted">Hours Logged</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-md-end">
+                            <button class="btn btn-outline-primary me-2">
+                                <i class="fas fa-edit me-1"></i>Edit Profile
+                            </button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-share me-1"></i>Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="row">
+        <!-- Main Profile Info -->
+        <div class="col-lg-8 mb-4">
+            <!-- Personal Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2 text-primary"></i>Personal Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Name</label>
+                            <div class="form-control-plaintext">{{ current_user.name if current_user.is_authenticated else 'John Doe' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            <div class="form-control-plaintext">{{ current_user.email if current_user.is_authenticated else 'john.doe@example.com' }}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Bio</label>
+                            <div class="form-control-plaintext">{{ current_user.bio if current_user.is_authenticated and current_user.bio else 'Passionate about productivity and task management. Always looking for ways to optimize workflows and achieve goals efficiently.' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2 text-secondary"></i>Account Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Account Type</label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-primary">Premium</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Member Since</label>
+                            <div class="form-control-plaintext">{{ current_user.created_at.strftime('%B %Y') if current_user.is_authenticated and hasattr(current_user, 'created_at') else 'January 2024' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Last Login</label>
+                            <div class="form-control-plaintext">{{ current_user.last_login.strftime('%b %d, %Y %H:%M') if current_user.is_authenticated and hasattr(current_user, 'last_login') else 'Dec 15, 2024 14:30' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Timezone</label>
+                            <div class="form-control-plaintext">UTC-5 (Eastern Time)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tasks -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks me-2 text-success"></i>Recent Tasks
+                    </h5>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if tasks %}
+                        {% for task in tasks[:5] %}
+                            <div class="task-item d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                                <div class="task-status">
+                                    {% if task.completed %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 {{ 'text-decoration-line-through text-muted' if task.completed else '' }}">{{ task.title }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>{{ task.due_date.strftime('%b %d, %Y') if task.due_date else 'No due date' }}
+                                        <i class="fas fa-clock ms-2 me-1"></i>{{ "%.1f"|format(task.estimate_hours) }} hrs
+                                    </small>
+                                </div>
+                                <span class="badge priority-badge {{ task.priority|lower }}">
+                                    {% if task.priority == 'High' %}
+                                        <i class="fas fa-arrow-up"></i> High
+                                    {% elif task.priority == 'Medium' %}
+                                        <i class="fas fa-minus"></i> Medium
+                                    {% else %}
+                                        <i class="fas fa-arrow-down"></i> Low
+                                    {% endif %}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="empty-state-icon mb-3">
+                                <i class="fas fa-clipboard-list fs-1 text-muted"></i>
+                            </div>
+                            <p class="text-muted">No tasks yet. <a href="{{ url_for('create_task') }}">Create your first task</a></p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Productivity Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2 text-info"></i>Productivity Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="productivityChart" width="300" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">This Week</span>
+                            <span class="small fw-bold text-success">{{ metrics.completed_tasks if metrics else 0 }} tasks</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">This Month</span>
+                            <span class="small fw-bold text-primary">{{ (metrics.total_tasks * 4) if metrics else 0 }} tasks</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">Avg/Day</span>
+                            <span class="small fw-bold text-warning">{{ "%.1f"|format(metrics.completed_tasks / 7) if metrics and metrics.completed_tasks > 0 else 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trophy me-2 text-warning"></i>Achievements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="achievement-item d-flex align-items-center gap-3 mb-3">
+                        <div class="achievement-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Streak Master</h6>
+                            <small class="text-muted">7 day completion streak</small>
+                        </div>
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <div class="achievement-item d-flex align-items-center gap-3 mb-3">
+                        <div class="achievement-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Task Champion</h6>
+                            <small class="text-muted">Completed 50+ tasks</small>
+                        </div>
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <div class="achievement-item d-flex align-items-center gap-3">
+                        <div class="achievement-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Time Master</h6>
+                            <small class="text-muted">Logged 100+ hours</small>
+                        </div>
+                        <i class="fas fa-lock text-muted"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>Quick Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="stat-item d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-label text-muted small">Total Tasks</span>
+                        <span class="stat-number fw-bold text-primary">{{ metrics.total_tasks if metrics else 0 }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-label text-muted small">Completed</span>
+                        <span class="stat-number fw-bold text-success">{{ metrics.completed_tasks if metrics else 0 }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-label text-muted small">Pending</span>
+                        <span class="stat-number fw-bold text-warning">{{ (metrics.total_tasks - metrics.completed_tasks) if metrics else 0 }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between align-items-center">
+                        <span class="stat-label text-muted small">Overdue</span>
+                        <span class="stat-number fw-bold text-danger">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for productivity chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('productivityChart').getContext('2d');
+    const productivityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Tasks Completed',
+                data: [2, 3, 1, 4, 2, 0, 1],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

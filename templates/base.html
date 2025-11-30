@@ -7,108 +7,277 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  </head>
-  <body class="bg-light">
+</head>
+<body class="bg-light">
     <div class="d-flex" id="wrapper">
-      <!-- Sidebar -->
-      <nav id="sidebar" class="bg-white border-end">
-        <div class="sidebar-header p-3">
-          <a href="{{ url_for('index') }}" class="navbar-brand d-flex align-items-center gap-2 mb-4">
-            <img src="{{ url_for('static', filename='images/task_manager_icon.png') }}" alt="Logo" width="30" height="30">
-            <span class="fs-4 fw-bold text-primary">TaskManager</span>
-          </a>
-          <hr />
-        </div>
-        <ul class="nav flex-column px-2">
-          {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('calendar') }}">
-                <i class="bi bi-calendar"></i> Calendar
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('create_task') }}">
-                <i class="bi bi-plus-circle"></i> New Task
-              </a>
-            </li>
-            {% if current_user.is_facilitator %}
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('inbox') }}">
-                <i class="bi bi-inbox"></i> Inbox
-              </a>
-            </li>
-            {% endif %}
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('logout') }}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-              </a>
-            </li>
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('login') }}">
-                <i class="bi bi-box-arrow-in-right"></i> Login
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('register') }}">
-                <i class="bi bi-person-plus"></i> Register
-              </a>
-            </li>
-          {% endif %}
-        </ul>
-      </nav>
-
-    <!-- Main Content -->
-    <div class="main-content" id="main-content">
-        <!-- Top Navigation -->
-        <header class="top-nav">
-            <div class="nav-left">
-                <button class="menu-toggle" id="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search tasks..." id="search-input">
-                </div>
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-white border-end shadow-sm">
+            <div class="sidebar-header p-3">
+                <a href="{{ url_for('index') }}" class="navbar-brand d-flex align-items-center gap-2 mb-4">
+                    <img src="{{ url_for('static', filename='images/task_manager_icon.png') }}" alt="Logo" width="32" height="32" class="rounded">
+                    <span class="fs-4 fw-bold text-primary">TaskManager</span>
+                </a>
             </div>
-            <div class="nav-right">
-                <button class="theme-toggle" id="theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <div class="profile-menu">
-                    <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Profile" class="profile-avatar">
-                    <div class="profile-dropdown">
-                        <a href="{{ url_for('profile') }}">
-                            <i class="fas fa-user"></i> Profile
+            <ul class="nav flex-column px-2">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt fs-5 text-primary"></i> <span class="fw-medium">Dashboard</span>
                         </a>
-                        <a href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('calendar') }}">
+                            <i class="fas fa-calendar-alt fs-5 text-info"></i> <span class="fw-medium">Calendar</span>
                         </a>
-                        <a href="{{ url_for('create_task') }}">
-                            <i class="fas fa-plus"></i> New Task
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('create_task') }}">
+                            <i class="fas fa-plus fs-5 text-success"></i> <span class="fw-medium">New Task</span>
                         </a>
-                        <hr>
-                        <a href="{{ url_for('logout') }}">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                    </li>
+                    {% if current_user.is_facilitator %}
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('inbox') }}">
+                            <i class="fas fa-inbox fs-5 text-warning"></i> <span class="fw-medium">Inbox</span>
                         </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="#notifications" data-bs-toggle="modal" data-bs-target="#notificationsModal">
+                            <i class="fas fa-bell fs-5 text-info"></i> <span class="fw-medium">Notifications</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user fs-5 text-secondary"></i> <span class="fw-medium">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="#settings" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                            <i class="fas fa-cog fs-5 text-muted"></i> <span class="fw-medium">Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt fs-5 text-danger"></i> <span class="fw-medium">Logout</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('login') }}">
+                            <i class="fas fa-sign-in-alt fs-5 text-primary"></i> <span class="fw-medium">Login</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a class="nav-link d-flex align-items-center gap-3 py-3 px-3 rounded-3" href="{{ url_for('register') }}">
+                            <i class="fas fa-user-plus fs-5 text-success"></i> <span class="fw-medium">Register</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content" id="main-content">
+            <!-- Top Navigation -->
+            <header class="top-nav bg-white shadow-sm border-bottom">
+                <div class="nav-left d-flex align-items-center">
+                    <button class="menu-toggle btn btn-link text-dark me-3" id="menu-toggle">
+                        <i class="fas fa-bars fs-5"></i>
+                    </button>
+                    <div class="search-bar position-relative">
+                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Search tasks..." id="search-input" style="width: 300px;">
                     </div>
                 </div>
-            </div>
-        </header>
+                <div class="nav-right d-flex align-items-center gap-3">
+                    <button class="theme-toggle btn btn-link text-dark" id="theme-toggle">
+                        <i class="fas fa-moon fs-5"></i>
+                    </button>
+                    <div class="notification-bell position-relative">
+                        <button class="btn btn-link text-dark position-relative">
+                            <i class="fas fa-bell fs-5"></i>
+                            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem;">3</span>
+                        </button>
+                    </div>
+                    <div class="profile-menu dropdown">
+                        <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Profile" class="profile-avatar rounded-circle border" width="40" height="40" data-bs-toggle="dropdown">
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{{ url_for('profile') }}">
+                                <i class="fas fa-user"></i> Profile
+                            </a></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{{ url_for('create_task') }}">
+                                <i class="fas fa-plus"></i> New Task
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
 
-        <!-- Page Content -->
-        <main class="page-content">
-            {% block content %}{% endblock %}
-        </main>
+            <!-- Page Content -->
+            <main class="page-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+
+        <!-- Overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
     </div>
 
-    <!-- Overlay for mobile -->
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <!-- Notifications Modal -->
+    <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationsModalLabel">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="notification-list">
+                        <div class="notification-item d-flex align-items-start gap-3 p-3 border-bottom">
+                            <div class="notification-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <h6 class="mb-1">Task Due Soon</h6>
+                                <p class="mb-1 text-muted small">Your task "Project Review" is due in 1 hour.</p>
+                                <small class="text-muted">2 minutes ago</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary">Mark Read</button>
+                        </div>
+                        <div class="notification-item d-flex align-items-start gap-3 p-3 border-bottom">
+                            <div class="notification-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <h6 class="mb-1">Reminder</h6>
+                                <p class="mb-1 text-muted small">Don't forget your meeting at 3 PM today.</p>
+                                <small class="text-muted">1 hour ago</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary">Mark Read</button>
+                        </div>
+                        <div class="notification-item d-flex align-items-start gap-3 p-3">
+                            <div class="notification-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <h6 class="mb-1">Task Completed</h6>
+                                <p class="mb-1 text-muted small">Great job! You completed "Code Review".</p>
+                                <small class="text-muted">Yesterday</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary">Mark Read</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Mark All Read</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-tabs">
+                        <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">General</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notification-settings" type="button" role="tab">Notifications</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance" type="button" role="tab">Appearance</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content mt-3" id="settingsTabContent">
+                            <div class="tab-pane fade show active" id="general" role="tabpanel">
+                                <h6>General Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Default Task Priority</label>
+                                    <select class="form-select">
+                                        <option>Low</option>
+                                        <option selected>Medium</option>
+                                        <option>High</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Time Zone</label>
+                                    <select class="form-select">
+                                        <option selected>UTC</option>
+                                        <option>EST</option>
+                                        <option>PST</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="notification-settings" role="tabpanel">
+                                <h6>Notification Preferences</h6>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email-notifications" checked>
+                                    <label class="form-check-label" for="email-notifications">
+                                        Email notifications for due tasks
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="reminder-notifications" checked>
+                                    <label class="form-check-label" for="reminder-notifications">
+                                        Reminder notifications (1 day, 1 hour, 30 mins)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="completion-notifications">
+                                    <label class="form-check-label" for="completion-notifications">
+                                        Task completion notifications
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="appearance" role="tabpanel">
+                                <h6>Appearance Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Theme</label>
+                                    <select class="form-select">
+                                        <option selected>Light</option>
+                                        <option>Dark</option>
+                                        <option>Auto</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Sidebar Position</label>
+                                    <select class="form-select">
+                                        <option selected>Left</option>
+                                        <option>Right</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
