@@ -457,6 +457,11 @@ def mark_notification_read(notification_id):
 def calendar():
     return render_template('calendar.html')
 
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html')
+
 # --- Background jobs (automations) ---
 def send_due_reminders():
     """Find tasks due tomorrow and send reminders to assignee/creator."""

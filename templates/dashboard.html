@@ -1,71 +1,145 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row gx-5">
-  <div class="col-12 col-md-4">
-    <div class="card task-list-card mb-5">
-      <div class="card-body">
-        <h4 class="mb-4 text-primary fw-bold">Metrics</h4>
-        <ul class="list-unstyled mb-0 fs-5">
-          <li class="mb-3"><strong>{{ metrics.total_tasks }}</strong> Total tasks</li>
-          <li class="mb-3"><strong>{{ metrics.completed_tasks }}</strong> Completed</li>
-          <li class="mb-3"><strong>{{ "%.1f"|format(metrics.completion_rate) }}%</strong> Completion rate</li>
-          <li class="mb-3"><strong>{{ "%.1f"|format(metrics.total_est_hours) }}</strong> Estimated hours</li>
-          <li><strong>{{ metrics.due_today }}</strong> Due today</li>
-        </ul>
-        <div class="d-grid gap-3 mt-5 sidebar-actions">
-          <a class="btn btn-primary btn-lg rounded-pill" href="{{ url_for('create_task') }}">+ New Task</a>
-          <a class="btn btn-outline-secondary btn-lg rounded-pill" href="{{ url_for('new_inquiry') }}">Send Inquiry</a>
-        </div>
-      </div>
+<!-- Metrics Section -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-icon primary">
+      <i class="fas fa-tasks"></i>
+    </div>
+    <div class="metric-content">
+      <h3>{{ metrics.total_tasks }}</h3>
+      <p>Total Tasks</p>
     </div>
   </div>
 
-  <div class="col-12 col-md-8">
-    <div class="card task-list-card">
-      <div class="card-body">
-        <h4 class="mb-4 text-primary fw-bold">Your Tasks</h4>
-        {% if not tasks %}
-          <p class="text-muted fs-5">No tasks yet.</p>
-        {% else %}
-          <div class="task-list">
-          {% for t in tasks %}
-            <div class="task-card d-flex flex-column flex-md-row justify-content-between align-items-start mb-4 priority-{{ t.priority|lower }}">
-              <div class="task-info flex-grow-1 mb-3 mb-md-0">
-                <h5 class="mb-2 fw-bold">
-                  {{ t.title }}
-                  {% if t.completed %}
-                    <span class="badge status-badge bg-success ms-2">Done</span>
-                  {% endif %}
-                </h5>
-                <div class="mb-2 d-flex flex-wrap align-items-center gap-3 fs-6">
-                  <span class="badge priority-badge {{ t.priority|lower }}">
+  <div class="metric-card">
+    <div class="metric-icon success">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <div class="metric-content">
+      <h3>{{ metrics.completed_tasks }}</h3>
+      <p>Completed</p>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon warning">
+      <i class="fas fa-chart-line"></i>
+    </div>
+    <div class="metric-content">
+      <h3>{{ "%.1f"|format(metrics.completion_rate) }}%</h3>
+      <p>Completion Rate</p>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon danger">
+      <i class="fas fa-clock"></i>
+    </div>
+    <div class="metric-content">
+      <h3>{{ metrics.due_today }}</h3>
+      <p>Due Today</p>
+    </div>
+  </div>
+</div>
+
+<!-- Tasks Section -->
+<div class="card">
+  <div class="card-header">
+    <div class="tasks-header">
+      <h2>Your Tasks</h2>
+      <a href="{{ url_for('create_task') }}" class="btn-primary">
+        <i class="fas fa-plus"></i>
+        New Task
+      </a>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if not tasks %}
+      <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No tasks yet</h4>
+        <p class="text-muted">Create your first task to get started!</p>
+        <a href="{{ url_for('create_task') }}" class="btn-primary">
+          <i class="fas fa-plus"></i>
+          Create Task
+        </a>
+      </div>
+    {% else %}
+      <div class="task-list">
+        {% for t in tasks %}
+          <div class="task-card">
+            <div class="task-header">
+              <h3 class="task-title">{{ t.title }}</h3>
+              <div class="task-badges">
+                {% if t.completed %}
+                  <span class="badge badge-status">Done</span>
+                {% else %}
+                  <span class="badge badge-priority">
                     {% if t.priority == 'Low' %}Timely
                     {% elif t.priority == 'Medium' %}Prompt
                     {% elif t.priority == 'High' %}Immediate
                     {% else %}{{ t.priority }}{% endif %}
                   </span>
-                  {% for cat in t.tags.split(',') %}
-                    <span class="badge category-badge">{{ cat.strip() }}</span>
-                  {% endfor %}
-                  <small class="text-muted ms-auto fst-italic">Est {{ "%.1f"|format(t.estimate_hours) }} hrs</small>
-                </div>
-                <p class="task-description mb-3 fs-6">{{ t.description[:120] }}{% if t.description|length > 120 %}...{% endif %}</p>
-                <small class="text-muted fst-italic">Due: {{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '—' }}</small>
+                {% endif %}
+                {% for cat in t.tags.split(',') %}
+                  <span class="badge badge-category">{{ cat.strip() }}</span>
+                {% endfor %}
               </div>
-              <div class="task-actions d-flex flex-wrap gap-3 justify-content-md-end">
+            </div>
+
+            <p class="task-description">
+              {{ t.description[:150] }}{% if t.description|length > 150 %}...{% endif %}
+            </p>
+
+            <div class="task-meta">
+              <div>
+                <i class="fas fa-clock"></i>
+                Est. {{ "%.1f"|format(t.estimate_hours) }} hrs
+                {% if t.due_date %}
+                  • Due: {{ t.due_date.strftime('%b %d, %Y') }}
+                {% endif %}
+              </div>
+              <div class="task-actions">
                 <form method="post" action="{{ url_for('toggle_complete', task_id=t.id) }}" style="display:inline">
-                  <button class="btn btn-sm btn-outline-success toggle-complete" data-id="{{ t.id }}">{{ 'Undo' if t.completed else 'Complete' }}</button>
+                  <button class="btn btn-sm btn-outline task-complete-toggle" data-task-id="{{ t.id }}">
+                    {{ 'Undo' if t.completed else 'Complete' }}
+                  </button>
                 </form>
-                <a class="btn btn-sm btn-primary" href="{{ url_for('edit_task', task_id=t.id) }}">Edit</a>
-                <form method="post" action="{{ url_for('delete_task', task_id=t.id) }}" style="display:inline" onsubmit="return confirm('Delete this task?')">
-                  <button class="btn btn-sm btn-danger">Delete</button>
+                <a class="btn btn-sm btn-outline" href="{{ url_for('edit_task', task_id=t.id) }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form method="post" action="{{ url_for('delete_task', task_id=t.id) }}" style="display:inline">
+                  <button class="btn btn-sm btn-danger task-delete" onclick="return confirm('Delete this task?')">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </form>
               </div>
             </div>
-          {% endfor %}
           </div>
-        {% endif %}
+        {% endfor %}
       </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-4">
+  <div class="card-body">
+    <h4 class="mb-3">Quick Actions</h4>
+    <div class="d-flex flex-wrap gap-3">
+      <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        New Task
+      </a>
+      <a href="{{ url_for('new_inquiry') }}" class="btn btn-outline">
+        <i class="fas fa-envelope"></i>
+        Send Inquiry
+      </a>
+      <a href="{{ url_for('calendar') }}" class="btn btn-outline">
+        <i class="fas fa-calendar"></i>
+        View Calendar
+      </a>
     </div>
   </div>
 </div>

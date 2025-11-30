@@ -1,183 +1,318 @@
-// Basic client-side validation and AJAX toggles
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.classList.contains('toggle-complete')) {
-    e.preventDefault();
-    let btn = e.target;
-    let parent = btn.closest('form');
-    let taskId = btn.getAttribute('data-id');
-    fetch(`/task/${taskId}/toggle_complete`, {method:'POST'}).then(r=>r.json()).then(data=>{
-      if (data.ok) {
-        btn.textContent = data.completed ? 'Undo' : 'Complete';
-        btn.classList.toggle('btn-success', data.completed);
-      } else {
-        alert('Could not toggle: ' + (data.message||''));
-      }
-    });
-  }
-});
-
-// client-side required field check for create task
-const tf = document.getElementById('taskForm');
-if (tf) {
-  tf.addEventListener('submit', function(e) {
-    const title = tf.querySelector('[name=title]').value.trim();
-    const estimate = parseFloat(tf.querySelector('[name=estimate_hours]').value);
-    if (title.length < 3) {
-      e.preventDefault();
-      alert('Title must be at least 3 characters.');
-      return;
-    }
-    if (!estimate || estimate <= 0) {
-      e.preventDefault();
-      alert('Estimate must be a positive number.');
-      return;
-    }
-  });
-}
-
-// Dynamic notifications
-function loadNotifications() {
-  fetch('/api/notifications')
-    .then(response => response.json())
-    .then(data => {
-      const dropdown = document.getElementById('notificationDropdown');
-      const badge = dropdown.querySelector('.badge');
-      const menu = dropdown.nextElementSibling;
-      const unreadCount = data.filter(n => !n.is_read).length;
-      badge.textContent = unreadCount;
-      badge.style.display = unreadCount > 0 ? 'inline' : 'none';
-
-      const header = menu.querySelector('.dropdown-header');
-      header.nextElementSibling.innerHTML = '';
-      data.slice(0, 5).forEach(notification => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.className = 'dropdown-item';
-        a.href = '#';
-        a.textContent = notification.message;
-        if (!notification.is_read) {
-          a.classList.add('fw-bold');
-        }
-        a.addEventListener('click', () => markAsRead(notification.id));
-        li.appendChild(a);
-        header.parentNode.insertBefore(li, header.nextElementSibling.nextElementSibling);
-      });
-      if (data.length > 5) {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.className = 'dropdown-item text-center';
-        a.href = '#';
-        a.textContent = 'View all notifications';
-        li.appendChild(a);
-        menu.appendChild(li);
-      }
-    });
-}
-
-function markAsRead(notificationId) {
-  fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
-    .then(() => loadNotifications());
-}
-
-// Load notifications on page load
-document.addEventListener('DOMContentLoaded', loadNotifications);
-
-// Calendar initialization
-if (document.getElementById('calendar')) {
-  document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-      },
-      events: function(fetchInfo, successCallback, failureCallback) {
-        fetch('/api/tasks')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Failed to fetch tasks');
-            }
-            return response.json();
-          })
-          .then(data => {
-            // Transform events to FullCalendar format
-            var events = data.map(task => {
-              var eventColor = '#2563eb'; // default blue
-              if (task.priority === 'High') {
-                eventColor = '#dc2626'; // red
-              } else if (task.priority === 'Medium') {
-                eventColor = '#d97706'; // amber
-              } else if (task.priority === 'Low') {
-                eventColor = '#059669'; // green
-              }
-
-              return {
-                id: task.id,
-                title: task.title,
-                start: task.due_date, // map due_date to start
-                backgroundColor: eventColor,
-                borderColor: eventColor,
-                textColor: '#ffffff',
-                extendedProps: {
-                  description: task.description,
-                  priority: task.priority,
-                  estimate_hours: task.estimate_hours,
-                  completed: task.completed
-                }
-              };
-            });
-            successCallback(events);
-          })
-          .catch(error => {
-            console.error('Error loading calendar events:', error);
-            failureCallback(error);
-          });
-      },
-      eventClick: function(info) {
-        var task = info.event;
-        var description = task.extendedProps.description || 'No description';
-        var priority = task.extendedProps.priority || 'Not set';
-        var estimate = task.extendedProps.estimate_hours || 'Not set';
-        var completed = task.extendedProps.completed ? 'Yes' : 'No';
-
-        alert('Task: ' + task.title +
-              '\nDescription: ' + description +
-              '\nPriority: ' + priority +
-              '\nEstimate: ' + estimate + ' hours' +
-              '\nCompleted: ' + completed);
-      },
-      height: 'auto',
-      aspectRatio: 1.35,
-      eventDisplay: 'block',
-      dayMaxEvents: true,
-      moreLinkClick: 'popover'
-    });
-
-    try {
-      calendar.render();
-    } catch (error) {
-      console.error('Error rendering calendar:', error);
-      calendarEl.innerHTML = '<div class="alert alert-danger">Error loading calendar. Please refresh the page.</div>';
-    }
-  });
-}
-
-// Search functionality
+// Modern Task Manager JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-  const searchInput = document.getElementById('taskSearchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      const query = this.value.toLowerCase();
-      const taskCards = document.querySelectorAll('.task-card');
-      taskCards.forEach(card => {
-        const title = card.querySelector('h5').textContent.toLowerCase();
-        const description = card.querySelector('.task-description').textContent.toLowerCase();
-        const tags = Array.from(card.querySelectorAll('.category-badge')).map(badge => badge.textContent.toLowerCase()).join(' ');
-        const visible = title.includes(query) || description.includes(query) || tags.includes(query);
-        card.style.display = visible ? '' : 'none';
-      });
+    // DOM Elements
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebarClose = document.getElementById('sidebar-close');
+    const themeToggle = document.getElementById('theme-toggle');
+    const searchInput = document.getElementById('search-input');
+    const body = document.body;
+
+    // Sidebar Toggle Functionality
+    function toggleSidebar() {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        if (window.innerWidth <= 768) {
+            // Mobile behavior
+            sidebar.classList.toggle('collapsed');
+            sidebarOverlay.classList.toggle('active');
+        } else {
+            // Desktop behavior
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+    }
+
+    // Event Listeners
+    if (menuToggle) {
+        menuToggle.addEventListener('click', toggleSidebar);
+    }
+
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', toggleSidebar);
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+    }
+
+    // Theme Toggle Functionality
+    function toggleTheme() {
+        const isDark = body.classList.contains('theme-dark');
+
+        if (isDark) {
+            body.classList.remove('theme-dark');
+            localStorage.setItem('theme', 'light');
+            updateThemeIcon(false);
+        } else {
+            body.classList.add('theme-dark');
+            localStorage.setItem('theme', 'dark');
+            updateThemeIcon(true);
+        }
+    }
+
+    function updateThemeIcon(isDark) {
+        if (themeToggle) {
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('theme-dark');
+        updateThemeIcon(true);
+    } else {
+        updateThemeIcon(false);
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Search Functionality
+    let searchTimeout;
+    function handleSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = searchInput.value.toLowerCase().trim();
+            const taskCards = document.querySelectorAll('.task-card');
+
+            taskCards.forEach(card => {
+                const title = card.querySelector('.task-title')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.task-description')?.textContent.toLowerCase() || '';
+                const badges = Array.from(card.querySelectorAll('.badge')).map(badge =>
+                    badge.textContent.toLowerCase()
+                ).join(' ');
+
+                const searchableText = `${title} ${description} ${badges}`;
+
+                if (searchableText.includes(query) || query === '') {
+                    card.style.display = 'block';
+                    card.classList.add('fade-in');
+                } else {
+                    card.style.display = 'none';
+                    card.classList.remove('fade-in');
+                }
+            });
+        }, 300);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearch);
+    }
+
+    // Task Actions
+    function initializeTaskActions() {
+        // Complete/Incomplete toggle
+        document.querySelectorAll('.task-complete-toggle').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const taskId = this.dataset.taskId;
+                const taskCard = this.closest('.task-card');
+                const statusBadge = taskCard.querySelector('.badge-status');
+
+                // Toggle status
+                if (statusBadge.textContent.includes('Done')) {
+                    statusBadge.textContent = 'In Progress';
+                    statusBadge.className = 'badge badge-warning';
+                    this.textContent = 'Complete';
+                    this.className = 'btn btn-sm btn-outline-success';
+                } else {
+                    statusBadge.textContent = 'Done';
+                    statusBadge.className = 'badge badge-status';
+                    this.textContent = 'Undo';
+                    this.className = 'btn btn-sm btn-outline-secondary';
+                }
+
+                // Add animation
+                taskCard.classList.add('fade-in');
+                setTimeout(() => taskCard.classList.remove('fade-in'), 300);
+            });
+        });
+
+        // Delete confirmation
+        document.querySelectorAll('.task-delete').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this task?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    }
+
+    initializeTaskActions();
+
+    // Progress Bar Animation
+    function animateProgressBars() {
+        const progressBars = document.querySelectorAll('.progress-fill');
+
+        progressBars.forEach(bar => {
+            const width = bar.style.width || '0%';
+            bar.style.width = '0%';
+
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    }
+
+    animateProgressBars();
+
+    // Smooth Scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
     });
-  }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + K for search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
+
+        // Escape to close sidebar on mobile
+        if (e.key === 'Escape' && window.innerWidth <= 768) {
+            sidebar.classList.add('collapsed');
+            sidebarOverlay.classList.remove('active');
+        }
+    });
+
+    // Window Resize Handler
+    function handleResize() {
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('collapsed');
+            sidebarOverlay.classList.remove('active');
+            mainContent.classList.remove('expanded');
+        } else {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+        }
+    }
+
+    window.addEventListener('resize', handleResize);
+
+    // Initial setup
+    handleResize();
+
+    // Add loading states
+    function showLoading(element) {
+        element.classList.add('loading');
+    }
+
+    function hideLoading(element) {
+        element.classList.remove('loading');
+    }
+
+    // Form validation
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+        });
+    });
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+            <button class="notification-close">&times;</button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Animate in
+        setTimeout(() => notification.classList.add('show'), 10);
+
+        // Auto remove
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+
+        // Manual close
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        });
+    }
+
+    // Make showNotification globally available
+    window.showNotification = showNotification;
+
+    // Initialize tooltips (if using Bootstrap tooltips)
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    if (typeof bootstrap !== 'undefined') {
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+
+    // Performance optimization: Lazy load images
+    const images = document.querySelectorAll('img[data-src]');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.remove('lazy');
+                observer.unobserve(img);
+            }
+        });
+    });
+
+    images.forEach(img => imageObserver.observe(img));
+
+    // Accessibility improvements
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+
+    // Focus management for modals (if any)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            const focusableElements = document.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    lastElement.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === lastElement) {
+                    firstElement.focus();
+                    e.preventDefault();
+                }
+            }
+        }
+    });
 });
