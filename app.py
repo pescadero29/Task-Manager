@@ -46,6 +46,8 @@ class User(db.Model, UserMixin):
     otp = db.Column(db.String(10), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
     bio = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime, nullable=True)
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)

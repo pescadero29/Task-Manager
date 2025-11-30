@@ -101,11 +101,11 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Member Since</label>
-                            <div class="form-control-plaintext">{{ current_user.created_at.strftime('%B %Y') if current_user.is_authenticated and hasattr(current_user, 'created_at') else 'January 2024' }}</div>
+                            <div class="form-control-plaintext">{{ current_user.created_at.strftime('%B %Y') if current_user.is_authenticated else 'January 2024' }}</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Last Login</label>
-                            <div class="form-control-plaintext">{{ current_user.last_login.strftime('%b %d, %Y %H:%M') if current_user.is_authenticated and hasattr(current_user, 'last_login') else 'Dec 15, 2024 14:30' }}</div>
+                            <div class="form-control-plaintext">{{ current_user.last_login.strftime('%b %d, %Y %H:%M') if current_user.is_authenticated and current_user.last_login else 'Dec 15, 2024 14:30' }}</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Timezone</label>
