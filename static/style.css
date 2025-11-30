@@ -18,6 +18,13 @@
   --info-color: #06b6d4;
   --info-light: #cffafe;
 
+  /* Pastel Accents */
+  --pastel-blue: #e0f2fe;
+  --pastel-green: #f0fdf4;
+  --pastel-purple: #faf5ff;
+  --pastel-pink: #fdf2f8;
+  --pastel-yellow: #fffbeb;
+
   /* Neutral Colors */
   --white: #ffffff;
   --gray-50: #f8fafc;
@@ -305,13 +312,32 @@ body {
   border: none;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  transition: var(--transition-normal);
+  transition: all var(--transition-normal);
   overflow: hidden;
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--pastel-blue) 0%, var(--pastel-green) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  border-radius: var(--radius-lg);
+  z-index: -1;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.card:hover::before {
+  opacity: 0.05;
 }
 
 .card-header {
