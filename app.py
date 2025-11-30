@@ -59,6 +59,9 @@ class Task(db.Model):
     completed = db.Column(db.Boolean, default=False)
     recurrence = db.Column(db.String(20), nullable=True)  # 'daily','weekly','monthly' or None
     reminder_sent = db.Column(db.Boolean, default=False)
+    reminder_1day_sent = db.Column(db.Boolean, default=False)
+    reminder_1hour_sent = db.Column(db.Boolean, default=False)
+    reminder_30min_sent = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Inquiry(db.Model):
@@ -496,9 +499,53 @@ def daily_digest():
     for f in facilitators:
         send_email(f.email, "Daily Digest - TaskManager", body)
 
+def send_inapp_reminders():
+    """Send in-app notifications for tasks due within 1 day, 1 hour, or 30 minutes."""
+    now = datetime.utcnow()
+    tasks = Task.query.filter(Task.due_date != None, Task.completed == False).all()
+    for t in tasks:
+        if t.due_date <= now:
+            continue  # Skip past due tasks
+        time_diff = t.due_date - now
+        # Check for 1 day reminder
+        if time_diff <= timedelta(days=1) and not t.reminder_1day_sent:
+            recipients = []
+            if t.assignee:
+                recipients.append(t.assignee)
+            else:
+                recipients.append(t.created_by)
+            for user_id in recipients:
+                notification = Notification(user_id=user_id, message=f"Reminder: Task '{t.title}' is due in 1 day.")
+                db.session.add(notification)
+            t.reminder_1day_sent = True
+        # Check for 1 hour reminder
+        elif time_diff <= timedelta(hours=1) and not t.reminder_1hour_sent:
+            recipients = []
+            if t.assignee:
+                recipients.append(t.assignee)
+            else:
+                recipients.append(t.created_by)
+            for user_id in recipients:
+                notification = Notification(user_id=user_id, message=f"Reminder: Task '{t.title}' is due in 1 hour.")
+                db.session.add(notification)
+            t.reminder_1hour_sent = True
+        # Check for 30 minutes reminder
+        elif time_diff <= timedelta(minutes=30) and not t.reminder_30min_sent:
+            recipients = []
+            if t.assignee:
+                recipients.append(t.assignee)
+            else:
+                recipients.append(t.created_by)
+            for user_id in recipients:
+                notification = Notification(user_id=user_id, message=f"Reminder: Task '{t.title}' is due in 30 minutes.")
+                db.session.add(notification)
+            t.reminder_30min_sent = True
+    db.session.commit()
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=send_due_reminders, trigger='interval', hours=6, id='reminders')
 scheduler.add_job(func=daily_digest, trigger='cron', hour=0, id='digest')  # midnight UTC
+scheduler.add_job(func=send_inapp_reminders, trigger='interval', minutes=30, id='inapp_reminders')
 scheduler.start()
 
 # --- Command to init DB ---

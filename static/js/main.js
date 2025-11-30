@@ -88,12 +88,79 @@ if (document.getElementById('calendar')) {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
-      events: '/api/tasks',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      events: function(fetchInfo, successCallback, failureCallback) {
+        fetch('/api/tasks')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to fetch tasks');
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Transform events to FullCalendar format
+            var events = data.map(task => {
+              var eventColor = '#2563eb'; // default blue
+              if (task.priority === 'High') {
+                eventColor = '#dc2626'; // red
+              } else if (task.priority === 'Medium') {
+                eventColor = '#d97706'; // amber
+              } else if (task.priority === 'Low') {
+                eventColor = '#059669'; // green
+              }
+
+              return {
+                id: task.id,
+                title: task.title,
+                start: task.due_date, // map due_date to start
+                backgroundColor: eventColor,
+                borderColor: eventColor,
+                textColor: '#ffffff',
+                extendedProps: {
+                  description: task.description,
+                  priority: task.priority,
+                  estimate_hours: task.estimate_hours,
+                  completed: task.completed
+                }
+              };
+            });
+            successCallback(events);
+          })
+          .catch(error => {
+            console.error('Error loading calendar events:', error);
+            failureCallback(error);
+          });
+      },
       eventClick: function(info) {
-        alert('Task: ' + info.event.title + '\nDescription: ' + info.event.extendedProps.description);
-      }
+        var task = info.event;
+        var description = task.extendedProps.description || 'No description';
+        var priority = task.extendedProps.priority || 'Not set';
+        var estimate = task.extendedProps.estimate_hours || 'Not set';
+        var completed = task.extendedProps.completed ? 'Yes' : 'No';
+
+        alert('Task: ' + task.title +
+              '\nDescription: ' + description +
+              '\nPriority: ' + priority +
+              '\nEstimate: ' + estimate + ' hours' +
+              '\nCompleted: ' + completed);
+      },
+      height: 'auto',
+      aspectRatio: 1.35,
+      eventDisplay: 'block',
+      dayMaxEvents: true,
+      moreLinkClick: 'popover'
     });
-    calendar.render();
+
+    try {
+      calendar.render();
+    } catch (error) {
+      console.error('Error rendering calendar:', error);
+      calendarEl.innerHTML = '<div class="alert alert-danger">Error loading calendar. Please refresh the page.</div>';
+    }
   });
 }
 
