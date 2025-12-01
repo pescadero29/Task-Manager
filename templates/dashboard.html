@@ -21,74 +21,74 @@
     </div>
 
     <!-- Analytics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
+    <div class="row mb-5 g-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm fade-in-up">
+                <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-tasks text-primary fs-4"></i>
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-4">
+                                <i class="fas fa-tasks text-primary fs-2"></i>
                             </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="card-title mb-1 text-muted">Total Tasks</h6>
-                            <h3 class="mb-0">{{ metrics.total_tasks }}</h3>
-                            <small class="text-muted">{{ metrics.pending_tasks }} pending</small>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-2 text-muted fw-medium">Total Tasks</h6>
+                            <h2 class="mb-1 fw-bold text-dark">{{ metrics.total_tasks }}</h2>
+                            <small class="text-muted fw-medium">{{ metrics.pending_tasks }} pending</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm fade-in-up">
+                <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-check-circle text-success fs-4"></i>
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3 me-4">
+                                <i class="fas fa-check-circle text-success fs-2"></i>
                             </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="card-title mb-1 text-muted">Completed</h6>
-                            <h3 class="mb-0">{{ metrics.completed_tasks }}</h3>
-                            <small class="text-muted">{{ "%.1f"|format(metrics.completion_rate) }}% rate</small>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-2 text-muted fw-medium">Completed</h6>
+                            <h2 class="mb-1 fw-bold text-dark">{{ metrics.completed_tasks }}</h2>
+                            <small class="text-muted fw-medium">{{ "%.1f"|format(metrics.completion_rate) }}% rate</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm fade-in-up">
+                <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-clock text-warning fs-4"></i>
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-4">
+                                <i class="fas fa-clock text-warning fs-2"></i>
                             </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="card-title mb-1 text-muted">Due Today</h6>
-                            <h3 class="mb-0">{{ metrics.due_today }}</h3>
-                            <small class="text-muted">{{ metrics.due_this_week }} this week</small>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-2 text-muted fw-medium">Due Today</h6>
+                            <h2 class="mb-1 fw-bold text-dark">{{ metrics.due_today }}</h2>
+                            <small class="text-muted fw-medium">{{ metrics.due_this_week }} this week</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm fade-in-up">
+                <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-danger bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-exclamation-triangle text-danger fs-4"></i>
+                            <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-4">
+                                <i class="fas fa-exclamation-triangle text-danger fs-2"></i>
                             </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="card-title mb-1 text-muted">Overdue</h6>
-                            <h3 class="mb-0">{{ metrics.overdue_tasks }}</h3>
-                            <small class="text-muted">Need attention</small>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-2 text-muted fw-medium">Overdue</h6>
+                            <h2 class="mb-1 fw-bold text-dark">{{ metrics.overdue_tasks }}</h2>
+                            <small class="text-muted fw-medium">Need attention</small>
                         </div>
                     </div>
                 </div>
@@ -164,40 +164,47 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="row mb-4">
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0">Weekly Progress</h5>
+    <div class="row mb-5 g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm fade-in-up">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-0 fw-bold text-dark">Weekly Progress</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div id="chartData" data-weekly-progress="{{ metrics.weekly_progress|tojson }}" data-categories="{{ metrics.categories|tojson }}" style="display: none;"></div>
-                    <canvas id="weeklyProgressChart" height="200"></canvas>
+                    <canvas id="weeklyProgressChart" height="250"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0">Task Categories</h5>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm fade-in-up">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-0 fw-bold text-dark">Task Categories</h5>
                 </div>
-                <div class="card-body">
-                    <canvas id="categoryChart" height="200"></canvas>
+                <div class="card-body p-4">
+                    <canvas id="categoryChart" height="250"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filters and Search -->
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="row g-3 align-items-center">
-                        <div class="col-md-3">
-                            <input type="text" class="form-control" id="taskSearchInput" placeholder="Search tasks...">
+            <div class="card border-0 shadow-sm fade-in-up">
+                <div class="card-body p-4">
+                    <div class="row g-4 align-items-end">
+                        <div class="col-lg-3 col-md-6">
+                            <label for="taskSearchInput" class="form-label fw-semibold text-dark">Search Tasks</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="taskSearchInput" placeholder="Search tasks...">
+                            </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-6">
+                            <label for="statusFilter" class="form-label fw-semibold text-dark">Status</label>
                             <select class="form-select" id="statusFilter">
                                 <option value="all">All Status</option>
                                 <option value="pending">Pending</option>
@@ -205,7 +212,8 @@
                                 <option value="overdue">Overdue</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-6">
+                            <label for="priorityFilter" class="form-label fw-semibold text-dark">Priority</label>
                             <select class="form-select" id="priorityFilter">
                                 <option value="all">All Priorities</option>
                                 <option value="high">High</option>
@@ -213,7 +221,8 @@
                                 <option value="low">Low</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-6">
+                            <label for="categoryFilter" class="form-label fw-semibold text-dark">Category</label>
                             <select class="form-select" id="categoryFilter">
                                 <option value="all">All Categories</option>
                                 <option value="work">Work</option>
@@ -221,16 +230,17 @@
                                 <option value="urgent">Urgent</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-6">
+                            <label for="sortFilter" class="form-label fw-semibold text-dark">Sort By</label>
                             <select class="form-select" id="sortFilter">
-                                <option value="due_date">Sort by Due Date</option>
-                                <option value="priority">Sort by Priority</option>
-                                <option value="created">Sort by Created</option>
+                                <option value="due_date">Due Date</option>
+                                <option value="priority">Priority</option>
+                                <option value="created">Created</option>
                             </select>
                         </div>
-                        <div class="col-md-1">
-                            <button class="btn btn-outline-secondary w-100" id="clearFilters">
-                                <i class="fas fa-times"></i>
+                        <div class="col-lg-1 col-md-6">
+                            <button class="btn btn-outline-secondary w-100 h-100" id="clearFilters">
+                                <i class="fas fa-times me-2"></i>Clear
                             </button>
                         </div>
                     </div>
