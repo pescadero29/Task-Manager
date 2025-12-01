@@ -50,6 +50,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(150))
     password_hash = db.Column(db.String(200), nullable=True)  # optional if OTP-only
     is_facilitator = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
     otp = db.Column(db.String(10), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
     bio = db.Column(db.Text, nullable=True)
@@ -75,6 +76,10 @@ class Task(db.Model):
     reminder_sent_30min = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
+    created_by_user = db.relationship('User', foreign_keys=[created_by], backref='created_tasks')
+    assignee_user = db.relationship('User', foreign_keys=[assignee], backref='assigned_tasks')
+
 class Inquiry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_email = db.Column(db.String(200), nullable=False)
@@ -90,6 +95,14 @@ class Notification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     message = db.Column(db.String(500), nullable=False)
     is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Log(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # admin or user performing action
+    action = db.Column(db.String(200), nullable=False)  # e.g., 'user_login', 'task_created', 'admin_edit_user'
+    details = db.Column(db.Text, nullable=True)  # additional info
+    ip_address = db.Column(db.String(45), nullable=True)  # IPv4/IPv6
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # --- Helpers ---
@@ -124,6 +137,12 @@ def generate_otp(n=6):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def log_action(user_id, action, details=None, ip_address=None):
+    """Log an action to the database."""
+    log = Log(user_id=user_id, action=action, details=details, ip_address=ip_address or request.remote_addr)
+    db.session.add(log)
+    db.session.commit()
 
 # --- Routes ---
 @app.before_request
@@ -254,9 +273,11 @@ def verify_otp():
         # success
         user.otp = None
         user.otp_expiry = None
+        user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
         session.pop('pending_user', None)
+        log_action(user.id, 'user_login', f'User {user.email} logged in')
         flash("Logged in!", 'success')
         return redirect(url_for('dashboard'))
     return render_template('verify_otp.html', email=user.email)
@@ -542,6 +563,65 @@ def upload_profile_picture():
     else:
         flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
     return redirect(url_for('profile'))
+
+# --- Admin Routes ---
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('dashboard'))
+    # Get overall system metrics
+    total_users = User.query.count()
+    total_tasks = Task.query.count()
+    total_inquiries = Inquiry.query.count()
+    recent_logs = Log.query.order_by(Log.created_at.desc()).limit(10).all()
+    return render_template('admin_dashboard.html', total_users=total_users, total_tasks=total_tasks, total_inquiries=total_inquiries, recent_logs=recent_logs)
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('dashboard'))
+    users = User.query.all()
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/tasks')
+@login_required
+def admin_tasks():
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('dashboard'))
+    tasks = Task.query.options(db.joinedload(Task.created_by_user), db.joinedload(Task.assignee_user)).all()
+    return render_template('admin_tasks.html', tasks=tasks)
+
+@app.route('/admin/logs')
+@login_required
+def admin_logs():
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('dashboard'))
+    logs = Log.query.order_by(Log.created_at.desc()).all()
+    return render_template('admin_logs.html', logs=logs)
+
+@app.route('/admin/manage_user/<int:user_id>', methods=['GET','POST'])
+@login_required
+def manage_user(user_id):
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('dashboard'))
+    user = User.query.get_or_404(user_id)
+    if request.method == 'POST':
+        user.name = request.form.get('name', user.name)
+        user.email = request.form.get('email', user.email)
+        user.is_facilitator = (request.form.get('is_facilitator') == 'on')
+        user.is_admin = (request.form.get('is_admin') == 'on')
+        db.session.commit()
+        log_action(current_user.id, 'admin_edit_user', f'Edited user {user.email}')
+        flash("User updated.", "success")
+        return redirect(url_for('admin_users'))
+    return render_template('admin_manage_user.html', user=user)
 
 # --- Background jobs (automations) ---
 def send_due_reminders():
