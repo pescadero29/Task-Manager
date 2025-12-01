@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 
 from flask import (Flask, flash, g, jsonify, redirect, render_template, request,
                    session, url_for)
+from werkzeug.utils import secure_filename
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (LoginManager, UserMixin, current_user, login_required,
                          login_user, logout_user)
@@ -29,6 +31,11 @@ MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
 MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
 
+# Upload config
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -46,6 +53,7 @@ class User(db.Model, UserMixin):
     otp = db.Column(db.String(10), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
     bio = db.Column(db.Text, nullable=True)
+    profile_picture = db.Column(db.String(200), nullable=True)  # filename of uploaded profile picture
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
 
@@ -61,7 +69,10 @@ class Task(db.Model):
     estimate_hours = db.Column(db.Float, default=1.0)
     completed = db.Column(db.Boolean, default=False)
     recurrence = db.Column(db.String(20), nullable=True)  # 'daily','weekly','monthly' or None
-    reminder_sent = db.Column(db.Boolean, default=False)
+    reminder_sent = db.Column(db.Boolean, default=False)  # Legacy field
+    reminder_sent_1day = db.Column(db.Boolean, default=False)
+    reminder_sent_1hr = db.Column(db.Boolean, default=False)
+    reminder_sent_30min = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Inquiry(db.Model):
@@ -111,23 +122,67 @@ def send_email(to_email, subject, body):
 def generate_otp(n=6):
     return ''.join(random.choices(string.digits, k=n))
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # --- Routes ---
 @app.before_request
 def attach_user_metrics():
     g.metrics = {}
     if current_user.is_authenticated:
-        # basic computations
+        # Get user's tasks
         tasks = Task.query.filter((Task.created_by == current_user.id) | (Task.assignee == current_user.id)).all()
+
+        # Basic metrics
         total = len(tasks)
         completed = sum(1 for t in tasks if t.completed)
-        total_est = sum(t.estimate_hours or 0 for t in tasks)
-        due_today = sum(1 for t in tasks if t.due_date and t.due_date.date() == datetime.utcnow().date())
+        pending = total - completed
+        overdue = sum(1 for t in tasks if t.due_date and t.due_date.date() < datetime.utcnow().date() and not t.completed)
+        due_today = sum(1 for t in tasks if t.due_date and t.due_date.date() == datetime.utcnow().date() and not t.completed)
+        due_this_week = sum(1 for t in tasks if t.due_date and t.due_date.date() <= (datetime.utcnow() + timedelta(days=7)).date() and t.due_date.date() >= datetime.utcnow().date() and not t.completed)
+
+        # Priority breakdown
+        high_priority = sum(1 for t in tasks if t.priority == 'High')
+        medium_priority = sum(1 for t in tasks if t.priority == 'Medium')
+        low_priority = sum(1 for t in tasks if t.priority == 'Low')
+
+        # Category breakdown (from tags)
+        categories = {}
+        for task in tasks:
+            if task.tags:
+                for tag in task.tags.split(','):
+                    tag = tag.strip().lower()
+                    categories[tag] = categories.get(tag, 0) + 1
+
+        # Weekly progress (last 7 days)
+        weekly_data = []
+        for i in range(6, -1, -1):
+            date = datetime.utcnow().date() - timedelta(days=i)
+            completed_on_date = sum(1 for t in tasks if t.completed and t.created_at.date() <= date)
+            weekly_data.append(completed_on_date)
+
+        # Completion rate over time
+        completion_rate = (completed/total*100) if total else 0
+
+        # Estimated hours
+        total_est_hours = sum(t.estimate_hours or 0 for t in tasks)
+        completed_est_hours = sum(t.estimate_hours or 0 for t in tasks if t.completed)
+
         g.metrics = {
             'total_tasks': total,
             'completed_tasks': completed,
-            'completion_rate': (completed/total*100) if total else 0,
-            'total_est_hours': total_est,
-            'due_today': due_today
+            'pending_tasks': pending,
+            'overdue_tasks': overdue,
+            'due_today': due_today,
+            'due_this_week': due_this_week,
+            'completion_rate': completion_rate,
+            'high_priority': high_priority,
+            'medium_priority': medium_priority,
+            'low_priority': low_priority,
+            'categories': categories,
+            'weekly_progress': weekly_data,
+            'total_est_hours': total_est_hours,
+            'completed_est_hours': completed_est_hours
         }
 
 @app.route('/')
@@ -465,26 +520,91 @@ def profile():
     tasks = Task.query.filter((Task.created_by == current_user.id) | (Task.assignee == current_user.id)).order_by(Task.due_date.asc().nulls_last()).all()
     return render_template('profile.html', tasks=tasks, metrics=g.metrics)
 
+# Profile picture upload
+@app.route('/profile/upload', methods=['POST'])
+@login_required
+def upload_profile_picture():
+    if 'profile_picture' not in request.files:
+        flash('No file part', 'danger')
+        return redirect(url_for('profile'))
+    file = request.files['profile_picture']
+    if file.filename == '':
+        flash('No selected file', 'danger')
+        return redirect(url_for('profile'))
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{current_user.id}_{file.filename}")
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        file.save(file_path)
+        current_user.profile_picture = filename
+        db.session.commit()
+        flash('Profile picture updated successfully!', 'success')
+    else:
+        flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF.', 'danger')
+    return redirect(url_for('profile'))
+
 # --- Background jobs (automations) ---
 def send_due_reminders():
-    """Find tasks due tomorrow and send reminders to assignee/creator."""
-    tomorrow = datetime.utcnow().date() + timedelta(days=1)
-    tasks = Task.query.filter(Task.due_date != None).all()
-    for t in tasks:
-        if t.due_date and t.due_date.date() == tomorrow and not t.reminder_sent:
-            # send to assignee if exists else creator
-            recipients = []
-            if t.assignee:
-                u = User.query.get(t.assignee)
-                if u: recipients.append(u.email)
-            creator = User.query.get(t.created_by)
-            if creator and creator.email not in recipients:
-                recipients.append(creator.email)
-            body = f"Reminder: Task '{t.title}' is due on {t.due_date.isoformat()}.\n\nDescription: {t.description or '-'}"
-            for r in recipients:
-                send_email(r, f"Reminder: Task due tomorrow - {t.title}", body)
-            t.reminder_sent = True
-            db.session.commit()
+    """Send reminders at multiple intervals: 1 day, 1 hour, 30 minutes before due date."""
+    now = datetime.utcnow()
+
+    # 1 day reminder
+    tomorrow = now.date() + timedelta(days=1)
+    tasks_1day = Task.query.filter(Task.due_date != None, Task.reminder_sent_1day == False).all()
+    for t in tasks_1day:
+        if t.due_date and t.due_date.date() == tomorrow and not t.completed:
+            send_reminder(t, "1 day", now)
+
+    # 1 hour reminder
+    one_hour_later = now + timedelta(hours=1)
+    tasks_1hr = Task.query.filter(Task.due_date != None, Task.reminder_sent_1hr == False).all()
+    for t in tasks_1hr:
+        if t.due_date and t.due_date <= one_hour_later and t.due_date > now and not t.completed:
+            send_reminder(t, "1 hour", now)
+
+    # 30 minutes reminder
+    thirty_min_later = now + timedelta(minutes=30)
+    tasks_30min = Task.query.filter(Task.due_date != None, Task.reminder_sent_30min == False).all()
+    for t in tasks_30min:
+        if t.due_date and t.due_date <= thirty_min_later and t.due_date > now and not t.completed:
+            send_reminder(t, "30 minutes", now)
+
+def send_reminder(task, time_frame, now):
+    """Helper function to send reminder and create notification."""
+    # Get recipients
+    recipients = []
+    if task.assignee:
+        u = User.query.get(task.assignee)
+        if u: recipients.append(u.email)
+    creator = User.query.get(task.created_by)
+    if creator and creator.email not in recipients:
+        recipients.append(creator.email)
+
+    # Send email
+    body = f"Reminder: Task '{task.title}' is due in {time_frame}.\n\nDue: {task.due_date.strftime('%Y-%m-%d %H:%M')}\nDescription: {task.description or '-'}\nPriority: {task.priority}"
+    subject = f"Task Reminder: {task.title} due in {time_frame}"
+
+    for r in recipients:
+        send_email(r, subject, body)
+
+    # Create in-app notification
+    for user_id in [task.assignee, task.created_by]:
+        if user_id:
+            notification = Notification(
+                user_id=user_id,
+                message=f"Task '{task.title}' is due in {time_frame} ({task.due_date.strftime('%b %d, %Y %H:%M')})"
+            )
+            db.session.add(notification)
+
+    # Mark reminder as sent
+    if time_frame == "1 day":
+        task.reminder_sent_1day = True
+    elif time_frame == "1 hour":
+        task.reminder_sent_1hr = True
+    elif time_frame == "30 minutes":
+        task.reminder_sent_30min = True
+
+    db.session.commit()
 
 def daily_digest():
     """Send digest to facilitators summarizing tasks due today and inquiries."""

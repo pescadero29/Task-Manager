@@ -164,20 +164,96 @@ if (document.getElementById('calendar')) {
   });
 }
 
-// Search functionality
+// Search and Filter functionality
 document.addEventListener('DOMContentLoaded', function() {
-  const searchInput = document.getElementById('taskSearchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      const query = this.value.toLowerCase();
-      const taskCards = document.querySelectorAll('.task-card');
-      taskCards.forEach(card => {
-        const title = card.querySelector('h5').textContent.toLowerCase();
-        const description = card.querySelector('.task-description').textContent.toLowerCase();
-        const tags = Array.from(card.querySelectorAll('.category-badge')).map(badge => badge.textContent.toLowerCase()).join(' ');
-        const visible = title.includes(query) || description.includes(query) || tags.includes(query);
-        card.style.display = visible ? '' : 'none';
-      });
+  const searchInput = document.getElementById('search-input');
+  const statusFilter = document.getElementById('statusFilter');
+  const priorityFilter = document.getElementById('priorityFilter');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const sortFilter = document.getElementById('sortFilter');
+
+  function filterTasks() {
+    const query = searchInput ? searchInput.value.toLowerCase() : '';
+    const statusValue = statusFilter ? statusFilter.value : 'all';
+    const priorityValue = priorityFilter ? priorityFilter.value : 'all';
+    const categoryValue = categoryFilter ? categoryFilter.value : 'all';
+    const sortValue = sortFilter ? sortFilter.value : 'due_date';
+
+    const taskCards = document.querySelectorAll('.task-card');
+    const tasksArray = Array.from(taskCards);
+
+    // Filter tasks
+    tasksArray.forEach(card => {
+      const title = card.querySelector('h5').textContent.toLowerCase();
+      const description = card.querySelector('.task-description').textContent.toLowerCase();
+      const tags = Array.from(card.querySelectorAll('.category-badge')).map(badge => badge.textContent.toLowerCase()).join(' ');
+      const priority = card.querySelector('.priority-badge').textContent.toLowerCase();
+      const isCompleted = card.querySelector('input.task-checkbox').checked;
+      const dueDate = card.getAttribute('data-due-date') || '';
+
+      let visible = true;
+
+      // Search filter
+      if (query && !(title.includes(query) || description.includes(query) || tags.includes(query))) {
+        visible = false;
+      }
+
+      // Status filter
+      if (statusValue !== 'all') {
+        if (statusValue === 'completed' && !isCompleted) visible = false;
+        if (statusValue === 'pending' && isCompleted) visible = false;
+        if (statusValue === 'overdue' && (!dueDate || new Date(dueDate) >= new Date() || isCompleted)) visible = false;
+      }
+
+      // Priority filter
+      if (priorityValue !== 'all' && !priority.includes(priorityValue.toLowerCase())) {
+        visible = false;
+      }
+
+      // Category filter
+      if (categoryValue !== 'all' && !tags.includes(categoryValue.toLowerCase())) {
+        visible = false;
+      }
+
+      card.style.display = visible ? '' : 'none';
     });
+
+    // Sort tasks
+    const taskList = document.querySelector('.task-list');
+    if (taskList) {
+      const visibleTasks = tasksArray.filter(card => card.style.display !== 'none');
+      visibleTasks.sort((a, b) => {
+        const aDueDate = a.getAttribute('data-due-date') || '';
+        const bDueDate = b.getAttribute('data-due-date') || '';
+        const aPriority = a.querySelector('.priority-badge').textContent.toLowerCase();
+        const bPriority = b.querySelector('.priority-badge').textContent.toLowerCase();
+        const aCreated = a.getAttribute('data-created') || '';
+        const bCreated = b.getAttribute('data-created') || '';
+
+        switch (sortValue) {
+          case 'due_date':
+            if (!aDueDate && !bDueDate) return 0;
+            if (!aDueDate) return 1;
+            if (!bDueDate) return -1;
+            return new Date(aDueDate) - new Date(bDueDate);
+          case 'priority':
+            const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+            return priorityOrder[aPriority] - priorityOrder[bPriority];
+          case 'created':
+            return new Date(bCreated) - new Date(aCreated);
+          default:
+            return 0;
+        }
+      });
+
+      visibleTasks.forEach(task => taskList.appendChild(task));
+    }
   }
+
+  // Add event listeners
+  if (searchInput) searchInput.addEventListener('input', filterTasks);
+  if (statusFilter) statusFilter.addEventListener('change', filterTasks);
+  if (priorityFilter) priorityFilter.addEventListener('change', filterTasks);
+  if (categoryFilter) categoryFilter.addEventListener('change', filterTasks);
+  if (sortFilter) sortFilter.addEventListener('change', filterTasks);
 });

@@ -1,95 +1,102 @@
 {% extends "base.html" %}
+
+{% block title %}Create Task - Task Manager{% endblock %}
+
 {% block content %}
-<div class="card mx-auto" style="max-width:720px">
-  <div class="card-body">
-    <h5>Create Task</h5>
-    <form method="post" id="taskForm" novalidate>
-      <div class="mb-3">
-        <label class="form-label">Title</label>
-        <input class="form-control" name="title" required minlength="3">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" name="description" rows=3></textarea>
-      </div>
-      <div class="row">
-        <div class="col-6 mb-3">
-          <label class="form-label">Due date</label>
-          <input class="form-control" type="datetime-local" name="due_date" id="due_date_create">
-        </div>
-        <div class="col-6 mb-3">
-          <label class="form-label">Estimate (hours)</label>
-          <input class="form-control" type="number" name="estimate_hours" value="1" min="0.1" step="0.1" required>
-        </div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Priority</label>
-        <select class="form-select" name="priority">
-          <option value="Low">Timely</option>
-          <option value="Medium" selected>Prompt</option>
-          <option value="High">Immediate</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Tags (comma separated)</label>
-        <input class="form-control" name="tags">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Recurrence</label>
-        <select class="form-select" name="recurrence">
-          <option value="">None</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-      </div>
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-plus-circle fa-2x text-primary me-3"></i>
+                        <div>
+                            <h2 class="card-title mb-1">Create New Task</h2>
+                            <p class="text-muted mb-0">Add a new task to your task list</p>
+                        </div>
+                    </div>
 
-      <button class="btn btn-primary">Create</button>
-    </form>
-  </div>
+                    <form method="POST" action="{{ url_for('create_task') }}">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Task Title *</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="due_date" class="form-label">Due Date</label>
+                                    <input type="datetime-local" class="form-control" id="due_date" name="due_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="estimate_hours" class="form-label">Estimate Hours</label>
+                                    <input type="number" class="form-control" id="estimate_hours" name="estimate_hours" step="0.5" min="0.5" value="1.0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tags" class="form-label">Tags</label>
+                                    <input type="text" class="form-control" id="tags" name="tags" placeholder="work, urgent, personal">
+                                    <div class="form-text">Separate tags with commas</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="recurrence" class="form-label">Recurrence</label>
+                                    <select class="form-select" id="recurrence" name="recurrence">
+                                        <option value="">No recurrence</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if current_user.is_facilitator %}
+                        <div class="mb-3">
+                            <label for="assignee" class="form-label">Assign To</label>
+                            <select class="form-select" id="assignee" name="assignee">
+                                <option value="">Unassigned</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.name or user.email }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Create Task</button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-<script>
-  function setMinDateTime(inputId) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    input.min = minDateTime;
-  }
-
-  function validateDueDateIsFuture(event, inputId) {
-    const input = document.getElementById(inputId);
-    if (!input) return true;
-    const dueDateStr = input.value;
-    if (!dueDateStr) return true;
-    const dueDate = new Date(dueDateStr);
-    const now = new Date();
-    if (dueDate < now) {
-      event.preventDefault();
-      alert("Due date cannot be in the past. Please select a valid date and time.");
-      input.focus();
-      return false;
-    }
-    return true;
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    setMinDateTime('due_date_create');
-    const form = document.getElementById('taskForm');
-    if (form) {
-      form.addEventListener('submit', function(e) {
-        if (!validateDueDateIsFuture(e, 'due_date_create')) {
-          return;
-        }
-      });
-      setInterval(() => setMinDateTime('due_date_create'), 60000);
-    }
-  });
-</script>
 {% endblock %}
