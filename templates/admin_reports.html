@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-chart-bar me-2"></i>Reports & Analytics
+                </h1>
+                <div>
+                    <button class="btn btn-success me-2" onclick="exportReport('csv')">
+                        <i class="fas fa-file-csv me-2"></i>Export CSV
+                    </button>
+                    <button class="btn btn-danger" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf me-2"></i>Export PDF
+                    </button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary ms-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Tasks per User</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="tasksPerUserChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Completed vs Pending Tasks</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="completedVsPendingChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Activity Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Activity Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="userActivityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Summary Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-primary">{{ total_users }}</h3>
+                                <p class="mb-0">Total Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-success">{{ total_tasks }}</h3>
+                                <p class="mb-0">Total Tasks</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-warning">
+                                <h3 class="text-center">{{ completed_tasks }}</h3>
+                                <p class="mb-0 text-center">Completed Tasks</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-info">{{ active_users }}</h3>
+                                <p class="mb-0">Active Users</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="application/json" id="chart-data">
+{
+    "tasksPerUserLabels": {{ tasks_per_user_labels|default([])|tojson }},
+    "tasksPerUserData": {{ tasks_per_user_data|default([])|tojson }},
+    "userActivityLabels": {{ user_activity_labels|default([])|tojson }},
+    "userActivityData": {{ user_activity_data|default([])|tojson }},
+    "completedTasks": {{ completed_tasks|default(0) }},
+    "pendingTasks": {{ pending_tasks|default(0) }}
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+    const { tasksPerUserLabels, tasksPerUserData, userActivityLabels, userActivityData, completedTasks, pendingTasks } = chartData;
+
+    // Tasks per User Chart
+    const tasksPerUserCtx = document.getElementById('tasksPerUserChart').getContext('2d');
+    new Chart(tasksPerUserCtx, {
+        type: 'bar',
+        data: {
+            labels: tasksPerUserLabels,
+            datasets: [{
+                label: 'Tasks',
+                data: tasksPerUserData,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Completed vs Pending Chart
+    const completedVsPendingCtx = document.getElementById('completedVsPendingChart').getContext('2d');
+    new Chart(completedVsPendingCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                data: [completedTasks, pendingTasks],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(255, 99, 132, 0.5)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    // User Activity Chart
+    const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+    new Chart(userActivityCtx, {
+        type: 'line',
+        data: {
+            labels: userActivityLabels,
+            datasets: [{
+                label: 'Active Users',
+                data: userActivityData,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+
+function exportReport(format) {
+    // Simple export functionality - in a real app, this would generate actual files
+    alert('Exporting report as ' + format.toUpperCase() + '. This feature would generate a ' + format.toUpperCase() + ' file with current analytics data.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications & Alerts - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-bell me-2"></i>Notifications & Alerts
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">{{ overdue_tasks }}</h3>
+                    <p class="mb-0">Overdue Tasks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ failed_tasks }}</h3>
+                    <p class="mb-0">Failed Tasks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ new_registrations }}</h3>
+                    <p class="mb-0">New Registrations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ system_alerts }}</h3>
+                    <p class="mb-0">System Alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="notificationTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="overdue-tab" data-bs-toggle="tab" data-bs-target="#overdue" type="button" role="tab">Overdue Tasks</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="failed-tab" data-bs-toggle="tab" data-bs-target="#failed" type="button" role="tab">Failed Tasks</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="registrations-tab" data-bs-toggle="tab" data-bs-target="#registrations" type="button" role="tab">New Registrations</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">System Alerts</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="notificationTabsContent">
+                        <!-- Overdue Tasks Tab -->
+                        <div class="tab-pane fade show active" id="overdue" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Task ID</th>
+                                            <th>Title</th>
+                                            <th>Assignee</th>
+                                            <th>Due Date</th>
+                                            <th>Days Overdue</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for task in overdue_tasks_list %}
+                                        <tr>
+                                            <td>{{ task.id }}</td>
+                                            <td>{{ task.title }}</td>
+                                            <td>{{ task.assignee_user.name or task.assignee_user.email if task.assignee else '-' }}</td>
+                                            <td>{{ task.due_date.strftime('%Y-%m-%d %H:%M') if task.due_date else '-' }}</td>
+                                            <td><span class="badge bg-danger">{{ (task.due_date - datetime.now()).days if task.due_date else 0 }} days</span></td>
+                                            <td>
+                                                <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                                <button class="btn btn-sm btn-warning ms-1" onclick="sendReminder(this)" data-task-id="{{ task.id }}">Send Reminder</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Failed Tasks Tab -->
+                        <div class="tab-pane fade" id="failed" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Task ID</th>
+                                            <th>Title</th>
+                                            <th>Assignee</th>
+                                            <th>Failure Reason</th>
+                                            <th>Failed At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for task in failed_tasks_list %}
+                                        <tr>
+                                            <td>{{ task.id }}</td>
+                                            <td>{{ task.title }}</td>
+                                            <td>{{ task.assignee_user.name or task.assignee_user.email if task.assignee else '-' }}</td>
+                                            <td>{{ task.failure_reason or 'Unknown' }}</td>
+                                            <td>{{ task.failed_at.strftime('%Y-%m-%d %H:%M') if task.failed_at else '-' }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success" onclick="retryTask(this)" data-task-id="{{ task.id }}">Retry</button>
+                                                <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-primary ms-1">Edit</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- New Registrations Tab -->
+                        <div class="tab-pane fade" id="registrations" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>User ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Registered At</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in new_registrations_list %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            <td>{{ user.name or '-' }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('manage_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Manage</a>
+                                                <button class="btn btn-sm btn-success ms-1" onclick="sendWelcomeEmail(this)" data-user-id="{{ user.id }}">Send Welcome</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- System Alerts Tab -->
+                        <div class="tab-pane fade" id="system" role="tabpanel">
+                            <div class="list-group">
+                                {% for alert in system_alerts_list %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ alert.title }}</h5>
+                                        <small>{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ alert.message }}</p>
+                                    <small class="text-muted">Severity: 
+                                        {% if alert.severity == 'high' %}
+                                            <span class="badge bg-danger">High</span>
+                                        {% elif alert.severity == 'medium' %}
+                                            <span class="badge bg-warning">Medium</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Low</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendReminder(button) {
+    const taskId = button.getAttribute('data-task-id');
+    // AJAX call to send reminder
+    fetch('/admin/send_reminder/' + taskId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Reminder sent successfully!');
+    })
+    .catch(error => {
+        alert('Error sending reminder: ' + error);
+    });
+}
+
+function retryTask(button) {
+    const taskId = button.getAttribute('data-task-id');
+    // AJAX call to retry task
+    fetch('/admin/retry_task/' + taskId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Task retry initiated!');
+        location.reload();
+    })
+    .catch(error => {
+        alert('Error retrying task: ' + error);
+    });
+}
+
+function sendWelcomeEmail(button) {
+    const userId = button.getAttribute('data-user-id');
+    // AJAX call to send welcome email
+    fetch('/admin/send_welcome/' + userId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Welcome email sent successfully!');
+    })
+    .catch(error => {
+        alert('Error sending welcome email: ' + error);
+    });
+}
+</script>
+{% endblock %}

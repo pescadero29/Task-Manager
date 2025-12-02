@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from flask import (Flask, flash, g, jsonify, redirect, render_template, request,
                    session, url_for)
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (LoginManager, UserMixin, current_user, login_required,
@@ -284,6 +285,41 @@ def verify_otp():
         flash("Logged in!", 'success')
         return redirect(url_for('dashboard'))
     return render_template('verify_otp.html', email=user.email)
+
+@app.route('/admin/login', methods=['GET','POST'])
+def admin_login():
+    if request.method == 'POST':
+        email = request.form.get('email','').strip().lower()
+        password = request.form.get('password','').strip()
+        otp = request.form.get('otp','').strip()
+        if not email or '@' not in email:
+            flash("Please provide a valid email.", 'danger')
+            return redirect(url_for('admin_login'))
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.is_admin:
+            flash("Invalid admin credentials.", 'danger')
+            return redirect(url_for('admin_login'))
+        if user.password_hash:
+            if not check_password_hash(user.password_hash, password):
+                flash("Invalid password.", 'danger')
+                return redirect(url_for('admin_login'))
+        else:
+            flash("Admin password not set. Contact support.", 'danger')
+            return redirect(url_for('admin_login'))
+        # Optional OTP
+        if otp:
+            if not user.otp or datetime.utcnow() > (user.otp_expiry or datetime.utcnow()) or otp != user.otp:
+                flash("Invalid or expired OTP.", 'danger')
+                return redirect(url_for('admin_login'))
+            user.otp = None
+            user.otp_expiry = None
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        login_user(user)
+        log_action(user.id, 'admin_login', f'Admin {user.email} logged in')
+        flash("Admin logged in!", 'success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('admin_login.html')
 
 @app.route('/logout')
 @login_required
@@ -576,10 +612,13 @@ def admin_dashboard():
         return redirect(url_for('dashboard'))
     # Get overall system metrics
     total_users = User.query.count()
+    active_users = User.query.filter(User.last_login != None).count()
     total_tasks = Task.query.count()
+    completed_tasks = Task.query.filter_by(completed=True).count()
+    pending_tasks = total_tasks - completed_tasks
     total_inquiries = Inquiry.query.count()
     recent_logs = Log.query.order_by(Log.created_at.desc()).limit(10).all()
-    return render_template('admin_dashboard.html', total_users=total_users, total_tasks=total_tasks, total_inquiries=total_inquiries, recent_logs=recent_logs)
+    return render_template('admin_dashboard.html', total_users=total_users, active_users=active_users, total_tasks=total_tasks, completed_tasks=completed_tasks, pending_tasks=pending_tasks, total_inquiries=total_inquiries, recent_logs=recent_logs)
 
 @app.route('/admin/users')
 @login_required
@@ -625,6 +664,15 @@ def manage_user(user_id):
         flash("User updated.", "success")
         return redirect(url_for('admin_users'))
     return render_template('admin_manage_user.html', user=user)
+
+@app.route('/admin/notifications')
+@login_required
+def admin_notifications():
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('dashboard'))
+    notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template('admin_notifications.html', notifications=notifications)
 
 # --- Background jobs (automations) ---
 def send_due_reminders():
