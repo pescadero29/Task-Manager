@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Login with OTP - TaskFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+            <div class="card shadow-lg border-0 fade-in-up">
+                <div class="card-body p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-envelope text-primary fs-1"></i>
+                        </div>
+                        <h2 class="fw-bold text-dark mb-2">Login with OTP</h2>
+                        <p class="text-muted mb-0">Enter your email to receive a login code</p>
+                    </div>
+
+                    <!-- Login OTP Form -->
+                    <form method="post" novalidate>
+                        <div class="mb-4">
+                            <label for="email" class="form-label fw-semibold text-dark">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </span>
+                                <input class="form-control border-start-0 ps-0" id="email" type="email" name="email"
+                                       placeholder="Enter your email" required />
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-3 fw-semibold mb-4" type="submit">
+                            <i class="fas fa-paper-plane me-2"></i>Send Login Code
+                        </button>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="text-center">
+                        <p class="text-muted mb-3">Prefer password login?</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-medium">
+                            Login with Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    We'll send a secure login code to your email address
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

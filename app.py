@@ -247,6 +247,9 @@ def login():
         db.session.commit()
         # send OTP email
         send_email(user.email, "Your TaskManager OTP", f"Hello {user.name or 'User'},\n\nYour OTP is: {otp}\nIt expires in 10 minutes.")
+        # For testing: print OTP to console for test accounts
+        if user.email in ['admin@test.com', 'user@test.com', 'facilitator@test.com']:
+            print(f"OTP for {user.email}: {otp}")
         session['pending_user'] = user.id
         flash("OTP sent to your email. Enter it below.", 'info')
         return redirect(url_for('verify_otp'))
