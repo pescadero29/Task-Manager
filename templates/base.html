@@ -44,6 +44,11 @@
                     </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('new_inquiry') }}">
+                            <i class="fas fa-envelope me-1"></i>Inquiry
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <form class="d-flex" role="search">
                             <input class="form-control me-2" type="search" id="globalSearchInput" placeholder="Search tasks..." aria-label="Search">
                         </form>
