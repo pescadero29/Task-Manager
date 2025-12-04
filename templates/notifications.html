@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Task Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-bell me-2"></i>Notifications
+                </h1>
+                <div>
+                    <button class="btn btn-outline-secondary me-2" onclick="markAllRead()">
+                        <i class="fas fa-check-double me-1"></i>Mark All Read
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if notifications %}
+                        <div class="list-group list-group-flush">
+                            {% for notification in notifications %}
+                                <div class="list-group-item {{ 'list-group-item-light' if notification.is_read else 'list-group-item-primary' }}">
+                                    <div class="d-flex w-100 justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1">{{ notification.message }}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>{{ notification.created_at.strftime('%b %d, %Y %H:%M') }}
+                                            </small>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            {% if not notification.is_read %}
+                                                <span class="badge bg-primary">New</span>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-outline-primary mark-read-btn" data-notification-id="{{ notification.id }}" {% if notification.is_read %}disabled{% endif %}>
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state-icon mb-3">
+                                <i class="fas fa-bell-slash fs-1 text-muted"></i>
+                            </div>
+                            <h5 class="text-muted">No notifications yet</h5>
+                            <p class="text-muted">You'll see task reminders and updates here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to mark-read buttons
+    const markReadButtons = document.querySelectorAll('.mark-read-btn');
+    markReadButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.getAttribute('data-notification-id');
+            markAsRead(notificationId);
+        });
+    });
+});
+
+function markAsRead(notificationId) {
+    fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to update the UI
+        } else {
+            alert('Error marking notification as read');
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+function markAllRead() {
+    // Get all unread notifications and mark them as read
+    const unreadButtons = document.querySelectorAll('.mark-read-btn:not([disabled])');
+    if (unreadButtons.length === 0) {
+        alert('No unread notifications to mark.');
+        return;
+    }
+
+    let promises = [];
+    unreadButtons.forEach(button => {
+        const notificationId = button.getAttribute('data-notification-id');
+        promises.push(
+            fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+        );
+    });
+
+    Promise.all(promises)
+    .then(() => {
+        location.reload(); // Refresh to update the UI
+    })
+    .catch(error => {
+        alert('Error marking notifications as read: ' + error);
+    });
+}
+</script>
+{% endblock %}

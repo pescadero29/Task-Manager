@@ -3,41 +3,109 @@
 {% block title %}Register - Task Manager{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center mt-5">
+<div class="container-fluid d-flex justify-content-center align-items-center min-vh-100 bg-light">
+    <div class="row justify-content-center w-100">
         <div class="col-md-6 col-lg-4">
-            <div class="card shadow">
+            <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-tasks fa-3x text-primary mb-3"></i>
-                        <h2 class="card-title">Create Account</h2>
-                        <p class="text-muted">Join Task Manager today</p>
+                        <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                        <h2 class="card-title text-primary">Create Your Account</h2>
+                        <p class="text-muted">Fill out the information below to register. We'll send an OTP to your email for verification.</p>
                     </div>
 
-                    <form method="POST" action="{{ url_for('register') }}">
+                    {% if not show_step2 %}
+                    <!-- Step 1: Enter Name and Email -->
+                    <form method="POST" action="{{ url_for('register') }}" id="registerForm">
                         <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input class="form-control" type="text" name="name" required />
+                            <label for="name" class="form-label">
+                                <i class="fas fa-user me-2"></i>Full Name
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Enter your full name" required>
                         </div>
-
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input class="form-control" type="email" name="email" required />
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email Address
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
                         </div>
-
-                        <div class="d-grid">
-                            <button class="btn btn-primary btn-lg" type="submit">Register</button>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            Send OTP 🔘
+                        </button>
+                    </form>
+                    {% else %}
+                    <!-- Step 2: OTP Verification -->
+                    <form method="POST" action="{{ url_for('register') }}" id="otpForm">
+                        <input type="hidden" name="step" value="2">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-envelope-open-text fa-2x text-primary mb-3"></i>
+                            <h4 class="text-primary">Verify Your Email</h4>
+                            <p class="text-muted">We've sent a 6-digit OTP to <strong>{{ email }}</strong></p>
+                        </div>
+                        <div class="mb-4">
+                            <label for="otp" class="form-label">
+                                <i class="fas fa-key me-2"></i>Enter OTP Code
+                            </label>
+                            <input type="text" class="form-control text-center" id="otp" name="otp" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            ✔ Register Account
+                        </button>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-link text-decoration-none" id="resendOtp">
+                                <i class="fas fa-redo me-1"></i>Resend OTP
+                            </button>
                         </div>
                     </form>
+                    {% endif %}
 
                     <div class="text-center mt-4">
-                        <p class="mb-0">Already have an account?
-                            <a href="{{ url_for('login') }}" class="text-primary">Sign in</a>
-                        </p>
+                        <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-primary fw-bold">Login here</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on first input
+    const firstInput = document.querySelector('input');
+    if (firstInput) firstInput.focus();
+
+    // Send OTP functionality
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const otpSection = document.getElementById('otpSection');
+    const registerBtn = document.getElementById('registerBtn');
+    const otpInput = document.getElementById('otp');
+
+    if (sendOtpBtn) {
+        sendOtpBtn.addEventListener('click', function() {
+            // Here you would typically send an AJAX request to send OTP
+            // For now, just show the OTP section
+            otpSection.style.display = 'block';
+            registerBtn.style.display = 'block';
+            sendOtpBtn.style.display = 'none';
+            if (otpInput) otpInput.focus();
+        });
+    }
+
+    // OTP input validation (only numbers)
+    if (otpInput) {
+        otpInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+    }
+});
+</script>
 {% endblock %}

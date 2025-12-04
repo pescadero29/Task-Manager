@@ -7,46 +7,41 @@
     <!-- Profile Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card profile-header-card">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
                     <div class="row align-items-center">
-                        <div class="col-md-3 text-center mb-4 mb-md-0">
-                            <div class="profile-avatar-container position-relative">
-                                <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Profile Picture" class="profile-avatar-large rounded-circle border shadow" width="120" height="120">
-                                <button class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0" style="width: 32px; height: 32px;" title="Change Photo">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h2 class="mb-2">{{ current_user.username if current_user.is_authenticated else 'Guest User' }}</h2>
-                            <p class="text-muted mb-3">Task Management Enthusiast</p>
-                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                <span class="badge bg-primary">Premium User</span>
-                                <span class="badge bg-success">Active</span>
-                                <span class="badge bg-info">{{ metrics.total_tasks if metrics else 0 }} Tasks Created</span>
-                            </div>
-                            <div class="profile-stats d-flex gap-4">
-                                <div class="text-center">
-                                    <div class="fw-bold text-primary">{{ metrics.completed_tasks if metrics else 0 }}</div>
-                                    <small class="text-muted">Completed</small>
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="profile-avatar me-4">
+                                    {% if current_user.profile_picture %}
+                                        <img src="{{ url_for('static', filename='uploads/' + current_user.profile_picture) }}"
+                                             alt="Profile Picture" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 80px; height: 80px;">
+                                            <i class="fas fa-user text-primary fs-1"></i>
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                <div class="text-center">
-                                    <div class="fw-bold text-success">{{ "%.1f"|format(metrics.completion_rate) if metrics else 0 }}%</div>
-                                    <small class="text-muted">Success Rate</small>
-                                </div>
-                                <div class="text-center">
-                                    <div class="fw-bold text-warning">{{ "%.1f"|format(metrics.total_est_hours) if metrics else 0 }}</div>
-                                    <small class="text-muted">Hours Logged</small>
+                                <div>
+                                    <h2 class="mb-1">{{ current_user.name or 'User' }}</h2>
+                                    <p class="text-muted mb-2">{{ current_user.email }}</p>
+                                    {% if current_user.is_admin %}
+                                        <span class="badge bg-danger">Administrator</span>
+                                    {% elif current_user.is_facilitator %}
+                                        <span class="badge bg-info">Facilitator</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">User</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 text-md-end">
-                            <button class="btn btn-outline-primary me-2">
-                                <i class="fas fa-edit me-1"></i>Edit Profile
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
                             </button>
-                            <button class="btn btn-primary">
-                                <i class="fas fa-share me-1"></i>Share
+                            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                <i class="fas fa-key me-2"></i>Change Password
                             </button>
                         </div>
                     </div>
@@ -55,207 +50,161 @@
         </div>
     </div>
 
-    <!-- Profile Content -->
-    <div class="row">
-        <!-- Main Profile Info -->
-        <div class="col-lg-8 mb-4">
-            <!-- Personal Information -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-user me-2 text-primary"></i>Personal Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Name</label>
-                            <div class="form-control-plaintext">{{ current_user.name if current_user.is_authenticated else 'John Doe' }}</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Email</label>
-                            <div class="form-control-plaintext">{{ current_user.email if current_user.is_authenticated else 'john.doe@example.com' }}</div>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Bio</label>
-                            <div class="form-control-plaintext">{{ current_user.bio if current_user.is_authenticated and current_user.bio else 'Passionate about productivity and task management. Always looking for ways to optimize workflows and achieve goals efficiently.' }}</div>
-                        </div>
+    <!-- Profile Stats -->
+    <div class="row mb-4 g-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-tasks text-primary fs-2"></i>
                     </div>
+                    <h3 class="mb-1">{{ metrics.total_tasks }}</h3>
+                    <p class="text-muted mb-0">Total Tasks</p>
                 </div>
             </div>
-
-            <!-- Account Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-cog me-2 text-secondary"></i>Account Settings
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Account Type</label>
-                            <div class="form-control-plaintext">
-                                <span class="badge bg-primary">Premium</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Member Since</label>
-                            <div class="form-control-plaintext">{{ current_user.created_at.strftime('%B %Y') if current_user.is_authenticated else 'January 2024' }}</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Last Login</label>
-                            <div class="form-control-plaintext">{{ current_user.last_login.strftime('%b %d, %Y %H:%M') if current_user.is_authenticated and current_user.last_login else 'Dec 15, 2024 14:30' }}</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Timezone</label>
-                            <div class="form-control-plaintext">UTC-5 (Eastern Time)</div>
-                        </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-check-circle text-success fs-2"></i>
                     </div>
+                    <h3 class="mb-1">{{ metrics.completed_tasks }}</h3>
+                    <p class="text-muted mb-0">Completed</p>
                 </div>
             </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-clock text-warning fs-2"></i>
+                    </div>
+                    <h3 class="mb-1">{{ metrics.due_today }}</h3>
+                    <p class="text-muted mb-0">Due Today</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-calendar text-info fs-2"></i>
+                    </div>
+                    <h3 class="mb-1">{{ "%.1f"|format(metrics.completion_rate) }}%</h3>
+                    <p class="text-muted mb-0">Completion Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- Recent Tasks -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-tasks me-2 text-success"></i>Recent Tasks
-                    </h5>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-primary">View All</a>
+    <!-- Recent Tasks -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">Recent Tasks</h5>
                 </div>
                 <div class="card-body">
                     {% if tasks %}
-                        {% for task in tasks[:5] %}
-                            <div class="task-item d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-                                <div class="task-status">
-                                    {% if task.completed %}
-                                        <i class="fas fa-check-circle text-success"></i>
-                                    {% else %}
-                                        <i class="fas fa-circle text-muted"></i>
-                                    {% endif %}
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1 {{ 'text-decoration-line-through text-muted' if task.completed else '' }}">{{ task.title }}</h6>
+                    <div class="row g-3">
+                        {% for task in tasks[:6] %}
+                        <div class="col-lg-6 col-xl-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-1 {{ 'text-decoration-line-through text-muted' if task.completed else '' }}">
+                                            {{ task.title }}
+                                        </h6>
+                                        <span class="badge
+                                            {% if task.priority == 'High' %}bg-danger
+                                            {% elif task.priority == 'Medium' %}bg-warning text-dark
+                                            {% else %}bg-success{% endif %}">
+                                            {{ task.priority }}
+                                        </span>
+                                    </div>
+                                    <p class="card-text text-muted small mb-2">
+                                        {{ task.description|truncate(100) if task.description else 'No description' }}
+                                    </p>
+                                    {% if task.due_date %}
                                     <small class="text-muted">
-                                        <i class="fas fa-calendar me-1"></i>{{ task.due_date.strftime('%b %d, %Y') if task.due_date else 'No due date' }}
-                                        <i class="fas fa-clock ms-2 me-1"></i>{{ "%.1f"|format(task.estimate_hours) }} hrs
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Due: {{ task.due_date.strftime('%b %d, %Y') }}
                                     </small>
-                                </div>
-                                <span class="badge priority-badge {{ task.priority|lower }}">
-                                    {% if task.priority == 'High' %}
-                                        <i class="fas fa-arrow-up"></i> High
-                                    {% elif task.priority == 'Medium' %}
-                                        <i class="fas fa-minus"></i> Medium
-                                    {% else %}
-                                        <i class="fas fa-arrow-down"></i> Low
                                     {% endif %}
-                                </span>
+                                </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center py-4">
-                            <div class="empty-state-icon mb-3">
-                                <i class="fas fa-clipboard-list fs-1 text-muted"></i>
-                            </div>
-                            <p class="text-muted">No tasks yet. <a href="{{ url_for('create_task') }}">Create your first task</a></p>
                         </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-tasks fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No tasks yet</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Productivity Chart -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-line me-2 text-info"></i>Productivity Overview
-                    </h5>
+    <!-- Account Information -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">Account Information</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="productivityChart" width="300" height="200"></canvas>
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="small text-muted">This Week</span>
-                            <span class="small fw-bold text-success">{{ metrics.completed_tasks if metrics else 0 }} tasks</span>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted">Name</label>
+                            <p class="mb-0">{{ current_user.name or 'Not set' }}</p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="small text-muted">This Month</span>
-                            <span class="small fw-bold text-primary">{{ (metrics.total_tasks * 4) if metrics else 0 }} tasks</span>
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="mb-0">{{ current_user.email }}</p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="small text-muted">Avg/Day</span>
-                            <span class="small fw-bold text-warning">{{ "%.1f"|format(metrics.completed_tasks / 7) if metrics and metrics.completed_tasks > 0 else 0 }}</span>
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted">Role</label>
+                            <p class="mb-0">
+                                {% if current_user.is_admin %}Administrator
+                                {% elif current_user.is_facilitator %}Facilitator
+                                {% else %}User{% endif %}
+                            </p>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted">Member Since</label>
+                            <p class="mb-0">{{ current_user.created_at.strftime('%B %Y') }}</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted">Last Login</label>
+                            <p class="mb-0">{{ current_user.last_login.strftime('%b %d, %Y %H:%M') if current_user.last_login else 'Never' }}</p>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Achievements -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-trophy me-2 text-warning"></i>Achievements
-                    </h5>
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">Quick Actions</h5>
                 </div>
                 <div class="card-body">
-                    <div class="achievement-item d-flex align-items-center gap-3 mb-3">
-                        <div class="achievement-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="fas fa-fire"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Streak Master</h6>
-                            <small class="text-muted">7 day completion streak</small>
-                        </div>
-                        <i class="fas fa-check-circle text-success"></i>
-                    </div>
-                    <div class="achievement-item d-flex align-items-center gap-3 mb-3">
-                        <div class="achievement-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Task Champion</h6>
-                            <small class="text-muted">Completed 50+ tasks</small>
-                        </div>
-                        <i class="fas fa-check-circle text-success"></i>
-                    </div>
-                    <div class="achievement-item d-flex align-items-center gap-3">
-                        <div class="achievement-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Time Master</h6>
-                            <small class="text-muted">Logged 100+ hours</small>
-                        </div>
-                        <i class="fas fa-lock text-muted"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2 text-primary"></i>Quick Stats
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="stat-item d-flex justify-content-between align-items-center mb-3">
-                        <span class="stat-label text-muted small">Total Tasks</span>
-                        <span class="stat-number fw-bold text-primary">{{ metrics.total_tasks if metrics else 0 }}</span>
-                    </div>
-                    <div class="stat-item d-flex justify-content-between align-items-center mb-3">
-                        <span class="stat-label text-muted small">Completed</span>
-                        <span class="stat-number fw-bold text-success">{{ metrics.completed_tasks if metrics else 0 }}</span>
-                    </div>
-                    <div class="stat-item d-flex justify-content-between align-items-center mb-3">
-                        <span class="stat-label text-muted small">Pending</span>
-                        <span class="stat-number fw-bold text-warning">{{ (metrics.total_tasks - metrics.completed_tasks) if metrics else 0 }}</span>
-                    </div>
-                    <div class="stat-item d-flex justify-content-between align-items-center">
-                        <span class="stat-label text-muted small">Overdue</span>
-                        <span class="stat-number fw-bold text-danger">0</span>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create New Task
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-tachometer-alt me-2"></i>View Dashboard
+                        </a>
+                        <a href="{{ url_for('calendar') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar me-2"></i>View Calendar
+                        </a>
+                        <a href="{{ url_for('notifications') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-bell me-2"></i>View Notifications
+                        </a>
                     </div>
                 </div>
             </div>
@@ -263,42 +212,75 @@
     </div>
 </div>
 
-<!-- Chart.js for productivity chart -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('productivityChart').getContext('2d');
-    const productivityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Tasks Completed',
-                data: [2, 3, 1, 4, 2, 0, 1],
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-});
-</script>
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('update_profile') }}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" readonly>
+                        <small class="text-muted">Email cannot be changed</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ current_user.bio or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile_picture" class="form-label">Profile Picture</label>
+                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                        <small class="text-muted">Upload a new profile picture (PNG, JPG, JPEG, GIF)</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('change_password') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
+                        <small class="text-muted">Password must be at least 6 characters</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
