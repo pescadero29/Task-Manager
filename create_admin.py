@@ -1,13 +1,14 @@
 from app import app, db, User
+from werkzeug.security import generate_password_hash
 
 with app.app_context():
     db.create_all()
 
     # Check and create admin user
     if not User.query.filter_by(email='admin@test.com').first():
-        admin = User(email='admin@test.com', name='Admin User', is_admin=True)
+        admin = User(email='admin@test.com', name='Admin User', password_hash=generate_password_hash('admin1234'), is_admin=True)
         db.session.add(admin)
-        print("Admin user created: admin@test.com")
+        print("Admin user created: admin@test.com with password 'admin1234'")
     else:
         print("Admin user already exists: admin@test.com")
 

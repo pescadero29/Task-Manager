@@ -229,6 +229,9 @@ def register():
             if not password:
                 flash("Please provide a password.", 'danger')
                 return redirect(url_for('register'))
+            if len(password) > 16:
+                flash("Password must be maximum 16 characters.", 'danger')
+                return redirect(url_for('register'))
             if User.query.filter_by(email=email).first():
                 flash("Email already registered.", 'warning')
                 return redirect(url_for('register'))
@@ -306,10 +309,10 @@ def login():
             log_action(None, 'login_attempt_failed', f'Invalid email {email}', request.remote_addr)
             flash("Please provide a valid email.", 'danger')
             return redirect(url_for('login'))
-        if not password or len(password) > 16:
+        if not password or len(password) < 6 or len(password) > 16:
             session[attempt_key] = attempts + 1
             log_action(None, 'login_attempt_failed', f'Invalid password length for {email}', request.remote_addr)
-            flash("Password must be maximum 16 characters.", 'danger')
+            flash("Password must be between 6 and 16 characters.", 'danger')
             return redirect(url_for('login'))
         user = User.query.filter_by(email=email).first()
         if not user:
@@ -487,7 +490,7 @@ def create_task():
         due_date = None
         if due_date_raw:
             try:
-                due_date = datetime.fromisoformat(due_date_raw)
+                due_date = datetime.fromisoformat(due_date_raw).replace(tzinfo=timezone.utc)
                 # Validate due_date is not in the past (allow current or future)
                 if due_date < datetime.now(timezone.utc):
                     flash("Due date cannot be in the past.", "danger")
