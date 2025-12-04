@@ -290,6 +290,7 @@ def login():
         name = request.form.get('name','').strip()
         email = request.form.get('email','').strip().lower()
         password = request.form.get('password','').strip()
+        otp = request.form.get('otp','').strip()
 
         # Brute-force prevention: attempt counter
         attempt_key = f"login_attempts_{email}"
@@ -326,14 +327,29 @@ def login():
             flash("Invalid password.", 'danger')
             return redirect(url_for('login'))
 
+        # Check OTP for admins (optional)
+        if user.is_admin and otp:
+            if not user.otp or datetime.now(timezone.utc) > (user.otp_expiry or datetime.now(timezone.utc)) or otp != user.otp:
+                session[attempt_key] = attempts + 1
+                log_action(user.id, 'login_attempt_failed', f'Invalid OTP for admin {email}', request.remote_addr)
+                flash("Invalid or expired OTP.", 'danger')
+                return redirect(url_for('login'))
+            user.otp = None
+            user.otp_expiry = None
+
         # Success: reset attempts and log in user
         session.pop(attempt_key, None)
         user.last_login = datetime.now(timezone.utc)
         db.session.commit()
         login_user(user)
-        log_action(user.id, 'user_login', f'User {user.email} logged in successfully', request.remote_addr)
-        flash("Logged in successfully!", 'success')
-        return redirect(url_for('dashboard'))
+        if user.is_admin:
+            log_action(user.id, 'admin_login', f'Admin {user.email} logged in successfully', request.remote_addr)
+            flash("Admin logged in successfully!", 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            log_action(user.id, 'user_login', f'User {user.email} logged in successfully', request.remote_addr)
+            flash("Logged in successfully!", 'success')
+            return redirect(url_for('dashboard'))
     # GET
     return render_template('login.html')
 
@@ -420,40 +436,7 @@ def verify_otp():
 
     return render_template('verify_otp.html', email=user.email)
 
-@app.route('/admin/login', methods=['GET','POST'])
-def admin_login():
-    if request.method == 'POST':
-        email = request.form.get('email','').strip().lower()
-        password = request.form.get('password','').strip()
-        otp = request.form.get('otp','').strip()
-        if not email or '@' not in email:
-            flash("Please provide a valid email.", 'danger')
-            return redirect(url_for('admin_login'))
-        user = User.query.filter_by(email=email).first()
-        if not user or not user.is_admin:
-            flash("Invalid admin credentials.", 'danger')
-            return redirect(url_for('admin_login'))
-        if user.password_hash:
-            if not check_password_hash(user.password_hash, password):
-                flash("Invalid password.", 'danger')
-                return redirect(url_for('admin_login'))
-        else:
-            flash("Admin password not set. Contact support.", 'danger')
-            return redirect(url_for('admin_login'))
-        # Optional OTP
-        if otp:
-            if not user.otp or datetime.now(timezone.utc) > (user.otp_expiry or datetime.now(timezone.utc)) or otp != user.otp:
-                flash("Invalid or expired OTP.", 'danger')
-                return redirect(url_for('admin_login'))
-            user.otp = None
-            user.otp_expiry = None
-        user.last_login = datetime.now(timezone.utc)
-        db.session.commit()
-        login_user(user)
-        log_action(user.id, 'admin_login', f'Admin {user.email} logged in')
-        flash("Admin logged in!", 'success')
-        return redirect(url_for('admin_dashboard'))
-    return render_template('admin_login.html')
+
 
 @app.route('/logout')
 @login_required
@@ -855,6 +838,40 @@ def manage_user(user_id):
         flash("User updated.", "success")
         return redirect(url_for('admin_users'))
     return render_template('admin_manage_user.html', user=user)
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        flash("Admin access required.", 'danger')
+        return redirect(url_for('admin_users'))
+
+    user = User.query.get_or_404(user_id)
+
+    # Prevent admin from deleting themselves
+    if user.id == current_user.id:
+        flash("You cannot delete your own account.", 'danger')
+        return redirect(url_for('admin_users'))
+
+    # Log the deletion before deleting
+    log_action(current_user.id, 'admin_delete_user', f'Deleted user {user.email} (ID: {user.id})')
+
+    # Delete associated data (cascading delete)
+    # Delete user's tasks
+    Task.query.filter((Task.created_by == user_id) | (Task.assignee == user_id)).delete()
+
+    # Delete user's notifications
+    Notification.query.filter_by(user_id=user_id).delete()
+
+    # Delete user's logs
+    Log.query.filter_by(user_id=user_id).delete()
+
+    # Delete the user
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f"User {user.email} has been deleted.", "success")
+    return redirect(url_for('admin_users'))
 
 @app.route('/admin/reports')
 @login_required
